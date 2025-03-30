@@ -1,11 +1,11 @@
-import { Button } from "@/components/ui/button"
+import { RootList } from "@/components/RootList.tsx";
 
 function App() {
-    return (
-        <div className="flex flex-col items-center justify-center min-h-svh">
-            <Button>Click me</Button>
-        </div>
-    )
+  return (
+    <div className="flex flex-col items-center justify-center min-h-svh">
+      <RootList />
+    </div>
+  );
 }
 
-export default App
+export default App;
