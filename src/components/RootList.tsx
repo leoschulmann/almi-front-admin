@@ -9,28 +9,40 @@ import { Input } from "@/components/ui/input.tsx";
 import { Plus } from "lucide-react";
 
 export function RootList() {
-  const [roots, setRoots] = useState<Root[] | null>(null);
-  const [visibleRoots, setVisibleRoots] = useState<Root[] | null>(null);
+  const [roots, setRoots] = useState<Root[]>([]);
+  const [visibleRoots, setVisibleRoots] = useState<Root[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
       try {
         const data: RootPage = await getDataScalar("root", RootPage, {
           searchParams: { page: 0, size: 1000 },
         });
-        setRoots(data.content);
-        setVisibleRoots(data.content);
+        if (isMounted) {
+          setRoots(data.content);
+          setVisibleRoots(data.content);
+        }
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : String(e));
-        console.log(e);
+        if (isMounted) {
+          setError(e instanceof Error ? e.message : String(e));
+          console.log(e);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchData();
+    void fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -46,10 +58,9 @@ export function RootList() {
               return;
             }
             setVisibleRoots(
-              (prevRoots) =>
-                prevRoots?.filter((root) =>
-                  root.name.toLowerCase().includes(query),
-                ) ?? null,
+              roots?.filter((root) =>
+                root.name.toLowerCase().includes(query),
+              ) ?? null,
             );
           }}
         />
@@ -75,16 +86,14 @@ export function RootList() {
         {error && <div className="text-red-500">{error}</div>}
 
         {!loading && !error && visibleRoots && (
-          <div>
-            {visibleRoots.map((root) => {
-              return (
-                <div key={root.id}>
-                  <div className="text-sm">{root.name}</div>
-                  <Separator className="my-2" />
-                </div>
-              );
-            })}
-          </div>
+          <ul>
+            {visibleRoots.map((root) => (
+              <li key={root.id}>
+                <div className="text-sm">{root.name}</div>
+                <Separator className="my-2" />
+              </li>
+            ))}
+          </ul>
         )}
       </ScrollArea>
     </div>
