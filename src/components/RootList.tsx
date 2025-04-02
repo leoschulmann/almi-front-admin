@@ -3,10 +3,11 @@ import { getDataScalar } from "@/util/ApiClient.ts";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { useEffect, useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { RootPage } from "@/model/RootPage.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { Plus } from "lucide-react";
+import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
+import { renderSkeleton } from "@/utils.tsx";
 
 export function RootList() {
   const [roots, setRoots] = useState<Root[]>([]);
@@ -45,6 +46,8 @@ export function RootList() {
     };
   }, []);
 
+  const { setSelectedRoot } = useSelectedRoot();
+
   return (
     <div className="h-screen w-48 flex flex-col">
       <div className="pt-3 pl-3 flex-shrink-0 flex items-center justify-between">
@@ -69,27 +72,20 @@ export function RootList() {
         </button>
       </div>
 
-      <ScrollArea className="flex-grow rounded-md border p-4 overflow-y-auto ml-3 mt-3">
-        {loading && (
-          <div>
-            {Array.from({ length: 30 }).map((_, index) => (
-              <Skeleton
-                key={index}
-                className={`h-5 ${
-                  index % 3 === 0 ? "w-48" : index % 3 === 1 ? "w-36" : "w-28"
-                } mb-4`}
-              />
-            ))}
-          </div>
-        )}
+      <ScrollArea className="flex-grow border-r  p-4 overflow-y-auto ml-3 mt-3">
+        {loading && renderSkeleton(15)}
 
         {error && <div className="text-red-500">{error}</div>}
 
         {!loading && !error && visibleRoots && (
           <ul>
             {visibleRoots.map((root) => (
-              <li key={root.id}>
-                <div className="text-sm">{root.name}</div>
+              <li
+                key={root.id}
+                onClick={() => setSelectedRoot(root)}
+                className="cursor-pointer"
+              >
+                <div className="text-sm text-center">{root.name}</div>
                 <Separator className="my-2" />
               </li>
             ))}
