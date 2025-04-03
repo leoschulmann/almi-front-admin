@@ -30,17 +30,21 @@ export async function getDataScalar<T extends object>(
     return plainToInstance(model, response as object);
 }
 
-export async function postData<T extends object, R>(
-    url: string,
-    body: T,
-    model: {
-        new (...args: ConstructorParameters<typeof Object>): R;
-    },
-    options?: Options,
+export async function postData<T extends object | string, R>(
+  url: string,
+  body: T,
+  model: {
+    new (...args: ConstructorParameters<typeof Object>): R;
+  },
+  options?: Options,
 ): Promise<R> {
-    const serializedBody = instanceToPlain(body); 
-    const response = await apiClient
-        .post(url, { ...options, json: serializedBody })
-        .json();
-    return plainToInstance(model, response); 
+  const response = await apiClient
+    .post(url, {
+      ...options,
+      ...(typeof body === "string"
+        ? { body: body }
+        : { json: instanceToPlain(body) }),
+    })
+    .json();
+  return plainToInstance(model, response);
 }
