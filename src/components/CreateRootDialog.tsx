@@ -12,12 +12,13 @@ import { Plus } from "lucide-react";
 import { postData } from "@/util/ApiClient.ts";
 import { Root } from "@/model/Root.ts";
 import { useState } from "react";
+import { InputRoot } from "@/components/InputRoot.tsx";
 
 export function CreateRootDialog({ onSuccess }: { onSuccess: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState("");
+  const [rootGlyphs, setRootGlyphs] = useState(["", "", "", ""]);
   const [sending, setSending] = useState(false);
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -30,13 +31,7 @@ export function CreateRootDialog({ onSuccess }: { onSuccess: () => void }) {
           <DialogTitle>Create Root</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Input 1"
-            className="border rounded p-2"
-          />
+          <InputRoot glyphs={rootGlyphs} setGlyphs={setRootGlyphs} />
         </div>
         <DialogFooter>
           <DialogClose>
@@ -49,12 +44,13 @@ export function CreateRootDialog({ onSuccess }: { onSuccess: () => void }) {
             disabled={sending}
             onClick={async () => {
               setSending(true);
+
               try {
-                await postData("root", input, Root);
+                await postData("root", rootGlyphs.join(""), Root);
               } finally {
                 setSending(false);
                 setIsOpen(false);
-                setInput("");
+                setRootGlyphs(["", "", "", ""]);
                 onSuccess();
               }
             }}
