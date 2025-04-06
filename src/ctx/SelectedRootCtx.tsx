@@ -10,7 +10,7 @@ const SelectedRootContext = createContext<SelectedRootContextValue | undefined>(
   undefined,
 );
 
-export const SelectedRootProvider = ({ children }: { children: ReactNode }) => {
+export function SelectedRootProvider({ children }: { children: ReactNode }) {
   const [selectedRoot, setSelectedRoot] = useState<Root | null>(null);
 
   return (
@@ -18,7 +18,7 @@ export const SelectedRootProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </SelectedRootContext.Provider>
   );
-};
+}
 
 export const useSelectedRoot = () => {
   const context = useContext(SelectedRootContext);
