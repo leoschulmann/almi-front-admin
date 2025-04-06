@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Separator } from "@/components/ui/separator.tsx";
 import { renderSkeleton } from "@/utils.tsx";
-import { Plus } from "lucide-react";
+import {CreateVerbDialogButton} from "@/components/CreateVerbDialogButton.tsx";
 
 function RootContent() {
   const { selectedRoot } = useSelectedRoot();
@@ -53,13 +53,7 @@ function RootContent() {
   return (
     <div className="h-screen w-48 flex flex-col ">
       <div className="flex-shrink-0 flex items-center justify-between p-3">
-        <button
-          disabled={!selectedRoot}
-          className="h-9 w-full flex items-center justify-center bg-blue-500 text-white rounded hover:bg-blue-600 
-               disabled:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed"
-        >
-          <Plus className="h-5 w-5" /> verb
-        </button>
+        <CreateVerbDialogButton enabled={!!selectedRoot} />
       </div>
       <ScrollArea className="flex-grow p-3 overflow-y-auto border-r">
         {!selectedRoot
