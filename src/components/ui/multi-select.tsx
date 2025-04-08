@@ -34,7 +34,7 @@ import {
  * Uses class-variance-authority (cva) to define different styles based on "variant" prop.
  */
 const multiSelectVariants = cva(
-    "m-1 transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300",
+    "m-1 transition ease-in-out  hover:-translate-y-1 hover:scale-115 duration-300",
     {
         variants: {
             variant: {
@@ -216,22 +216,34 @@ export const MultiSelect = React.forwardRef<
                                             <Badge
                                                 key={value}
                                                 className={cn(
+                                                    "cursor-pointer",
                                                     isAnimating ? "animate-bounce" : "",
                                                     multiSelectVariants({ variant })
-                                                )}
+                                                )
+                                            }
+
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    toggleOption(value);
+                                                }}
+                                                
                                                 style={{ animationDuration: `${animation}s` }}
                                             >
-                                                {IconComponent && (
-                                                    <IconComponent className="h-4 w-4 mr-2" />
-                                                )}
+
+                                                {/*{IconComponent && (*/}
+                                                {/*    <IconComponent className="h-4 w-4 mr-2" />*/}
+                                                {/*)}*/}
+
                                                 {option?.label}
-                                                <XCircle
-                                                    className="ml-2 h-4 w-4 cursor-pointer"
-                                                    onClick={(event) => {
-                                                        event.stopPropagation();
-                                                        toggleOption(value);
-                                                    }}
-                                                />
+
+                                                {/*<XCircle*/}
+                                                {/*    className="ml-2 h-4 w-4 cursor-pointer"*/}
+                                                {/*    onClick={(event) => {*/}
+                                                {/*        event.stopPropagation();*/}
+                                                {/*        toggleOption(value);*/}
+                                                {/*    }}*/}
+                                                {/*/>*/}
+
                                             </Badge>
                                         );
                                     })}
@@ -245,13 +257,13 @@ export const MultiSelect = React.forwardRef<
                                             style={{ animationDuration: `${animation}s` }}
                                         >
                                             {`+ ${selectedValues.length - maxCount} more`}
-                                            <XCircle
+                                            {/*<XCircle
                                                 className="ml-2 h-4 w-4 cursor-pointer"
                                                 onClick={(event) => {
                                                     event.stopPropagation();
                                                     clearExtraOptions();
                                                 }}
-                                            />
+                                            />*/}
                                         </Badge>
                                     )}
                                 </div>

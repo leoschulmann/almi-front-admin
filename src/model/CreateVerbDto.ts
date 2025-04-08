@@ -11,30 +11,24 @@ export class CreateVerbDto {
   @Expose({ name: "b" })
   binyanId: number;
 
-  /*
-      @Expose({ name: "g" })
-      gizrahId: number[];
-  
-      @Expose({ name: "p" })
-      prepositionId: number[];
-    */
+  @Expose({ name: "g" })
+  gizrahId: number[];
+
+  @Expose({ name: "p" })
+  prepositionId: number[];
 
   constructor(
     value?: string,
     rootId?: number,
     binyanId?: number,
-    /*
-            gizrahId?: number[],
-            prepositionId?: number[],
-          */
+    gizrahId?: number[],
+    prepositionId?: number[],
   ) {
     this.value = value ?? "";
     this.rootId = rootId ?? 0;
     this.binyanId = binyanId ?? 0;
-    /*
-          this.gizrahId = gizrahId ?? [];
-          this.prepositionId = prepositionId ?? [];
-        */
+    this.gizrahId = gizrahId ?? [];
+    this.prepositionId = prepositionId ?? [];
   }
 }
 
@@ -51,11 +45,8 @@ export const createVerbSchema = z.object({
     .max(1000, "rootId must be < 1000"),
 
   binyanId: z.number().min(1, "binyanId required"),
-  /*
-      gizrahId: z.array(z.number()),
-  
-      prepositionId: z.array(z.number()),
-    */
+  gizrahId: z.array(z.number()),
+  prepositionId: z.array(z.number()),
 });
 
 export type CreateVerbType = z.infer<typeof createVerbSchema>;

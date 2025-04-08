@@ -13,7 +13,7 @@ import { useDictionaryContext } from "@/ctx/InitialDictionariesLoadCtx.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { createVerbSchema } from "@/model/CreateVerbDto.ts";
+import { CreateVerbDto, createVerbSchema } from "@/model/CreateVerbDto.ts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -26,27 +26,33 @@ import {
 } from "@/components/ui/form.tsx";
 import {
   Select,
+  SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectContent,
 } from "@/components/ui/select.tsx";
 import { Binyan } from "@/model/Binyan.ts";
 import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
   const [isOpen, setOpen] = useState<boolean>(false);
-  const [sending, setSending] = useState(false);
+  const [sending, setSending] = useState<boolean>(false);
   const { binyans, gizrahs, prepositions } = useDictionaryContext();
   const { selectedRoot } = useSelectedRoot();
 
+  const defaultVerbData: CreateVerbDto = {
+    value: "אאאא",
+    rootId: -1,
+    binyanId: 1,
+    gizrahId: [],
+    prepositionId: [],
+  };
+
   const form = useForm<z.infer<typeof createVerbSchema>>({
     resolver: zodResolver(createVerbSchema),
-    defaultValues: {
-      value: "אאאא",
-      rootId: -1,
-      binyanId: 1,
-    },
+    defaultValues: defaultVerbData,
   });
 
   // Synchronize `rootId` in the form with the selected root
@@ -54,7 +60,7 @@ export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
     if (selectedRoot?.id) {
       form.setValue("rootId", selectedRoot.id);
     }
-  }, [selectedRoot?.id, form]);
+  }, [selectedRoot, selectedRoot?.id, form]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
@@ -67,6 +73,7 @@ export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
         </Button>
       </DialogTrigger>
       <DialogContent className="w-96">
+        <DialogDescription className="hidden" />
         <DialogHeader>
           <DialogTitle className="text-center">
             Create verb for root
@@ -132,6 +139,62 @@ export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="gizrahId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gizrah's</FormLabel>
+                  <FormControl>
+                    <MultiSelect
+                      options={gizrahs.map((g) => ({
+                        label: g.value,
+                        value: g.id.toString(),
+                      }))}
+                      onValueChange={(values: string[]) => {
+                        field.onChange(
+                          values.map((val: string) => parseInt(val, 10)),
+                        );
+                      }}
+                      // defaultValue={}
+                      placeholder="Select gizrah"
+                      variant="secondary"
+                      maxCount={3}
+                    />
+                  </FormControl>
+                  <FormDescription />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="prepositionId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Prepositions</FormLabel>
+                  <FormControl>
+                    <MultiSelect
+                      options={prepositions.map((p) => ({
+                        label: p.value,
+                        value: p.id.toString(),
+                      }))}
+                      onValueChange={(values: string[]) => {
+                        field.onChange(
+                          values.map((val: string) => parseInt(val, 10)),
+                        );
+                      }}
+                      // defaultValue={}
+                      placeholder="Select preposition"
+                      variant="secondary"
+                      maxCount={3}
+                    />
+                  </FormControl>
+                  <FormDescription />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </form>
         </Form>
         <DialogFooter>
@@ -139,7 +202,10 @@ export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
             className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
             onClick={() => {
               setOpen(false);
-              form.reset();
+              form.reset({
+                ...defaultVerbData,
+                rootId: selectedRoot?.id,
+              });
             }}
           >
             Cancel
@@ -150,13 +216,18 @@ export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
             disabled={sending}
             onClick={form.handleSubmit(async (data) => {
               setSending(true);
+
               console.log(
-                `sending verb=${data.value}, root-id=${data.rootId}, binyan-id=${data.binyanId}`,
+                `sending verb=${data.value}, root-id=${data.rootId}, binyan-id=${data.binyanId}` +
+                  ` gizrahs=${data.gizrahId} prepositions=${data.prepositionId}`,
               );
               await new Promise((resolve) => setTimeout(resolve, 1300));
               setSending(false);
               setOpen(false);
-              form.reset();
+              form.reset({
+                ...defaultVerbData,
+                rootId: selectedRoot?.id,
+              });
             })}
           >
             {sending ? (
