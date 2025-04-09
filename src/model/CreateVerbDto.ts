@@ -41,7 +41,7 @@ export const createVerbSchema = z.object({
 
   rootId: z
     .number()
-    .min(10, "rootId required")
+    .min(0, "rootId must be > 0")
     .max(1000, "rootId must be < 1000"),
 
   binyanId: z.number().min(1, "binyanId required"),

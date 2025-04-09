@@ -35,6 +35,9 @@ import { Binyan } from "@/model/Binyan.ts";
 import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { DialogDescription } from "@radix-ui/react-dialog";
+import { postData } from "@/util/ApiClient.ts";
+import { Verb } from "@/model/Verb.ts";
+import { plainToInstance } from "class-transformer";
 
 export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
   const [isOpen, setOpen] = useState<boolean>(false);
@@ -88,7 +91,7 @@ export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
               name="rootId"
               render={({ field }) => (
                 <FormItem>
-                  <input type="hidden" {...field} />
+                  <Input type="hidden" {...field} />
                   <FormDescription />
                   <FormMessage />
                 </FormItem>
@@ -202,10 +205,7 @@ export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
             className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
             onClick={() => {
               setOpen(false);
-              form.reset({
-                ...defaultVerbData,
-                rootId: selectedRoot?.id,
-              });
+              form.reset({ ...defaultVerbData, rootId: selectedRoot?.id });
             }}
           >
             Cancel
@@ -215,19 +215,27 @@ export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
             className="w-1/4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center justify-center"
             disabled={sending}
             onClick={form.handleSubmit(async (data) => {
-              setSending(true);
+              try {
+                setSending(true);
 
-              console.log(
-                `sending verb=${data.value}, root-id=${data.rootId}, binyan-id=${data.binyanId}` +
-                  ` gizrahs=${data.gizrahId} prepositions=${data.prepositionId}`,
-              );
-              await new Promise((resolve) => setTimeout(resolve, 1300));
-              setSending(false);
-              setOpen(false);
-              form.reset({
-                ...defaultVerbData,
-                rootId: selectedRoot?.id,
-              });
+                const payload: CreateVerbDto = plainToInstance(
+                  CreateVerbDto,
+                  data,
+                  { ignoreDecorators: true },
+                );
+
+                await postData("verb", payload, Verb);
+
+                setOpen(false);
+                form.reset({ ...defaultVerbData, rootId: selectedRoot?.id });
+              } catch (error) {
+                console.error("Failed to submit the form:", error);
+                alert(
+                  "An error occurred while submitting the form. Please try again.",
+                );
+              } finally {
+                setSending(false);
+              }
             })}
           >
             {sending ? (
