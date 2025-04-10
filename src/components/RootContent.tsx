@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Separator } from "@/components/ui/separator.tsx";
 import { renderSkeleton } from "@/utils.tsx";
-import {CreateVerbDialogButton} from "@/components/CreateVerbDialogButton.tsx";
+import { CreateVerbDialogButton } from "@/components/CreateVerbDialogButton.tsx";
 
 function RootContent() {
   const { selectedRoot } = useSelectedRoot();
@@ -53,7 +53,12 @@ function RootContent() {
   return (
     <div className="h-screen w-48 flex flex-col ">
       <div className="flex-shrink-0 flex items-center justify-between p-3">
-        <CreateVerbDialogButton enabled={!!selectedRoot} />
+        <CreateVerbDialogButton
+          enabled={!!selectedRoot}
+          onSuccess={(id: number, value: string, version: number) => {
+            setDtos((prev) => [...prev, { id, value, version }]);
+          }}
+        />
       </div>
       <ScrollArea className="flex-grow p-3 overflow-y-auto border-r">
         {!selectedRoot

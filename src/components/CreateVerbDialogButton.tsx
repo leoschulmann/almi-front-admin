@@ -39,7 +39,13 @@ import { postData } from "@/util/ApiClient.ts";
 import { Verb } from "@/model/Verb.ts";
 import { plainToInstance } from "class-transformer";
 
-export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
+export function CreateVerbDialogButton({
+  enabled,
+  onSuccess,
+}: {
+  enabled: boolean;
+  onSuccess: (id: number, value: string, version: number) => void;
+}) {
   const [isOpen, setOpen] = useState<boolean>(false);
   const [sending, setSending] = useState<boolean>(false);
   const { binyans, gizrahs, prepositions } = useDictionaryContext();
@@ -224,7 +230,8 @@ export function CreateVerbDialogButton({ enabled }: { enabled: boolean }) {
                   { ignoreDecorators: true },
                 );
 
-                await postData("verb", payload, Verb);
+                const verb: Verb = await postData("verb", payload, Verb);
+                onSuccess(verb.id, verb.value, verb.version);
 
                 setOpen(false);
                 form.reset({ ...defaultVerbData, rootId: selectedRoot?.id });
