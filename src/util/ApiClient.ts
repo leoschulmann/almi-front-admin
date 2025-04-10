@@ -2,32 +2,32 @@ import ky, { Options } from "ky";
 import { instanceToPlain, plainToInstance } from "class-transformer";
 
 const apiClient = ky.create({
-    prefixUrl: "http://localhost:9999/api", 
-    headers: {
-        "Content-Type": "application/json",
-    },
+  prefixUrl: "http://localhost:9999/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 export async function getDataVector<T extends object>(
-    url: string,
-    model: {
-        new (...args: ConstructorParameters<typeof Object>): T;
-    },
-    options?: Options,
+  url: string,
+  model: {
+    new (...args: ConstructorParameters<typeof Object>): T;
+  },
+  options?: Options,
 ): Promise<T[]> {
-    const response = await apiClient.get(url, options).json();
-    return plainToInstance(model, response as object[]);
+  const response = await apiClient.get(url, options).json();
+  return plainToInstance(model, response as object[]);
 }
 
 export async function getDataScalar<T extends object>(
-    url: string,
-    model: {
-        new (...args: ConstructorParameters<typeof Object>): T;
-    },
-    options?: Options,
+  url: string,
+  model: {
+    new (...args: ConstructorParameters<typeof Object>): T;
+  },
+  options?: Options,
 ): Promise<T> {
-    const response = await apiClient.get(url, options).json();
-    return plainToInstance(model, response as object);
+  const response = await apiClient.get(url, options).json();
+  return plainToInstance(model, response as object);
 }
 
 export async function postData<T extends object | string, R>(

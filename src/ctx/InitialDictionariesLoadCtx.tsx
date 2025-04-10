@@ -28,7 +28,6 @@ export function DictionaryContextProvider({ children }: { children: ReactNode })
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log("Current time:", new Date().toLocaleTimeString());
 
       try {
         const [fetchedBinyans, fetchedGizrahs, fetchedPrepositions] =
