@@ -84,7 +84,7 @@ export function RootList() {
               <li
                 key={root.id}
                 onClick={() => setSelectedRoot(root)}
-                className="cursor-pointer"
+                className="cursor-pointer hover:bg-gray-100"
               >
                 <div className="text-sm text-center">{root.name}</div>
                 <Separator className="my-2" />

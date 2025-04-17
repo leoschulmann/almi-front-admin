@@ -6,11 +6,13 @@ import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Separator } from "@/components/ui/separator.tsx";
 import { renderSkeleton } from "@/utils.tsx";
 import { CreateVerbDialogButton } from "@/components/CreateVerbDialogButton.tsx";
+import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 
 function RootContent() {
   const { selectedRoot } = useSelectedRoot();
   const [dtos, setDtos] = useState<VerbShortDto[]>([]);
   const [isLoading, setLoading] = useState(false);
+  const { setVerb } = useSelectedVerb();
 
   const fetchVerbs = async (rootId: number): Promise<void> => {
     setLoading(true);
@@ -41,9 +43,13 @@ function RootContent() {
 
   const renderVerbList = () => (
     <ul>
-      {dtos.map(({ id, value }: VerbShortDto) => (
-        <li key={id}>
-          <div className="text-sm text-center">{value}</div>
+      {dtos.map((dto: VerbShortDto) => (
+        <li
+          key={dto.id}
+          onClick={() => setVerb(dto)}
+          className="cursor-pointer hover:bg-gray-100"
+        >
+          <div className="text-sm text-center">{dto.value}</div>
           <Separator className="my-2" />
         </li>
       ))}
