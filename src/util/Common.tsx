@@ -1,5 +1,13 @@
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 
+export function renderMessageCentered(message: string) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm text-center">
+      <p>{message}</p>
+    </div>
+  );
+}
+
 export function renderSkeleton(count: number = 30) {
   return (
     <div>

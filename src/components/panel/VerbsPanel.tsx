@@ -4,11 +4,11 @@ import { VerbShortDto } from "@/model/VerbShortDto.ts";
 import { useEffect, useState } from "react";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Separator } from "@/components/ui/separator.tsx";
-import { renderSkeleton } from "@/utils.tsx";
 import { CreateVerbDialogButton } from "@/components/CreateVerbDialogButton.tsx";
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
+import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
 
-function RootContent() {
+function VerbsPanel() {
   const { selectedRoot } = useSelectedRoot();
   const [dtos, setDtos] = useState<VerbShortDto[]>([]);
   const [isLoading, setLoading] = useState(false);
@@ -34,12 +34,6 @@ function RootContent() {
       void fetchVerbs(selectedRoot.id);
     }
   }, [selectedRoot]);
-
-  const renderMessage = (message: string) => (
-    <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm text-center">
-      <p>{message}</p>
-    </div>
-  );
 
   const renderVerbList = () => (
     <ul>
@@ -68,15 +62,15 @@ function RootContent() {
       </div>
       <ScrollArea className="flex-grow p-3 overflow-y-auto border-r">
         {!selectedRoot
-          ? renderMessage("Select a root")
+          ? renderMessageCentered("Select a root")
           : isLoading
             ? renderSkeleton(15)
             : dtos.length > 0
               ? renderVerbList()
-              : renderMessage(`Nothing found for '${selectedRoot?.name}' 😕`)}
+              : renderMessageCentered(`Nothing found for '${selectedRoot?.name}' 😕`)}
       </ScrollArea>
     </div>
   );
 }
 
-export { RootContent };
+export { VerbsPanel };
