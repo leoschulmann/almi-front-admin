@@ -12,31 +12,45 @@ import {
   TupleForTenses,
 } from "@/util/VerbFormCombinator.ts";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
+import { useDictionaryContext } from "@/ctx/InitialDictionariesLoadCtx.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Lang } from "@/model/Lang.ts";
 
 export function VerbFormsPanel() {
   const { verb } = useSelectedVerb();
   const [isLoading, setLoading] = useState(false);
   const [verbForms, setVerbForms] = useState<VerbForm[]>([]);
-
-  async function fetchVerbForms(verbId: number) {
-    setLoading(true);
-
-    try {
-      const forms: VerbForm[] = await getDataVector("verb/form", VerbForm, {
-        searchParams: { verb_id: verbId },
-      });
-      setVerbForms(forms);
-    } catch (error) {
-      console.error("Error loading data:", error);
-      setVerbForms([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { langs } = useDictionaryContext();
+  const [selectedLang, setSelectedLang] = useState<Lang>();
 
   useEffect(() => {
+    if (langs && langs.length > 0) {
+      const lang = langs[0];
+      setSelectedLang(lang);
+    }
+  }, [langs]);
+  useEffect(() => {
     if (verb) {
-      void fetchVerbForms(verb.id);
+      void (async function (verbId: number) {
+        setLoading(true);
+        try {
+          const forms: VerbForm[] = await getDataVector("verb/form", VerbForm, {
+            searchParams: { verb_id: verbId },
+          });
+          setVerbForms(forms);
+        } catch (error) {
+          console.error("Error loading data:", error);
+          setVerbForms([]);
+        } finally {
+          setLoading(false);
+        }
+      })(verb.id);
     }
   }, [verb]);
 
@@ -80,7 +94,7 @@ export function VerbFormsPanel() {
       "IMPERATIVE",
     ).forEach((e) => content.push(e));
 
-    return content;
+    return <ul>{content}</ul>;
   }
 
   function processTense(forms: VerbForm[], tense: Tense): ReactElement[] {
@@ -105,21 +119,18 @@ export function VerbFormsPanel() {
 
   function renderVerbForm(vf: VerbForm): ReactElement {
     return (
-      <div className="flex items-center gap-3">
+      <li
+        key={`${vf.tense}${vf.gender}${vf.person}${vf.plurality}`}
+        className="flex items-center gap-3"
+      >
         <img
           src={getIcon(vf.gender, vf.person, vf.plurality)}
           className="w-6 h-6"
+          alt={`gender: ${vf.gender}, person: ${vf.person}, plurality: ${vf.plurality}`}
         ></img>
-        {vf.value},{" "}
-        {vf.transliterations
-          .map((t) => {
-
-            console.log(`${t.lang}-${t.value}-${t.id}`);
-            
-          return   t.lang + ":" + t.value;
-          })
-          .join(", ")}
-      </div>
+        <span className="font-rubik font-semibold text-xl">{vf.value}</span>
+        {vf.transliterations.map((t) => t.lang + ":" + t.value).join(", ")}
+      </li>
     );
   }
 
@@ -128,17 +139,25 @@ export function VerbFormsPanel() {
     tense: Tense,
   ): ReactElement {
     return (
-      <div className="flex items-center gap-3">
-        <img src={getIcon(gender, person, plurality)} className="w-6 h-6"></img>
+      <li
+        key={`${tense}${gender}${person}${plurality}`}
+        className="flex items-center gap-3"
+      >
+        <img
+          src={getIcon(gender, person, plurality)}
+          className="w-6 h-6"
+          alt={`gender: ${gender}, person: ${person}, plurality: ${plurality}`}
+        ></img>
         Missing verb form for {person}, {gender}, {plurality}{" "}
         {optional ? "[optional]" : ""}
-      </div>
+      </li>
     );
   }
 
   function renderTitle(title: string) {
     return (
-      <div>
+      // <div>
+      <li key={`title-${title}`}>
         <div className="flex items-center gap-3">
           <div className="h-0.5 w-1/24 bg-[#FF006E]" />
           <div className="text-2xl font-normal font-noto-sans text-[#FF006E] italic text-left">
@@ -146,19 +165,44 @@ export function VerbFormsPanel() {
           </div>
           <div className="h-0.5 w-1/24 bg-[#FF006E]" />
         </div>
-      </div>
+      </li>
+      // </div>
     );
   }
 
   return (
     <div className="h-screen w-full flex flex-col">
-      <div className="p-3">
+      <div className="p-3 flex items-center gap-3">
         <Button
           disabled={true}
-          className="h-9 flex items-center justify-center bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="h-9 w-32 justify-center bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           <Plus className="h-5 w-5" /> verb form
         </Button>
+
+        {selectedLang ? (
+          <Select
+            value={selectedLang.name}
+            onValueChange={(e) =>
+              setSelectedLang(langs.find((l) => l.name === e))
+            }
+          >
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {langs.map(({ code, name }) => {
+                return (
+                  <SelectItem key={code} value={name}>
+                    {name}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        ) : (
+          renderSkeleton(1)
+        )}
       </div>
       <ScrollArea className="flex-grow p-3 overflow-y-auto">
         {!verb

@@ -30,6 +30,13 @@ export async function getDataScalar<T extends object>(
   return plainToInstance(model, response as object);
 }
 
+export async function getAsMap(
+  url: string,
+  options?: Options,
+): Promise<Map<string, string>> {
+  return await apiClient.get(url, options).json();
+}
+
 export async function postData<T extends object | string, R>(
   url: string,
   body: T,
