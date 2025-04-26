@@ -20,21 +20,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Lang } from "@/model/Lang.ts";
+import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 
 export function VerbFormsPanel() {
   const { verb } = useSelectedVerb();
   const [isLoading, setLoading] = useState(false);
   const [verbForms, setVerbForms] = useState<VerbForm[]>([]);
   const { langs } = useDictionaryContext();
-  const [selectedLang, setSelectedLang] = useState<Lang>();
+  const { lang, setLang } = useSelectedLang();
 
   useEffect(() => {
     if (langs && langs.length > 0) {
       const lang = langs[0];
-      setSelectedLang(lang);
+      setLang(lang);
     }
-  }, [langs]);
+  }, [langs, setLang]);
+
   useEffect(() => {
     if (verb) {
       void (async function (verbId: number) {
@@ -180,12 +181,10 @@ export function VerbFormsPanel() {
           <Plus className="h-5 w-5" /> verb form
         </Button>
 
-        {selectedLang ? (
+        {lang ? (
           <Select
-            value={selectedLang.name}
-            onValueChange={(e) =>
-              setSelectedLang(langs.find((l) => l.name === e))
-            }
+            value={lang.name}
+            onValueChange={(e) => setLang(langs.find((l) => l.name === e))}
           >
             <SelectTrigger className="w-36">
               <SelectValue />

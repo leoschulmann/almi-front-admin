@@ -7,12 +7,14 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { CreateVerbDialogButton } from "@/components/CreateVerbDialogButton.tsx";
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
+import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 
 function VerbsPanel() {
   const { selectedRoot } = useSelectedRoot();
   const [dtos, setDtos] = useState<VerbShortDto[]>([]);
   const [isLoading, setLoading] = useState(false);
   const { setVerb } = useSelectedVerb();
+  const { lang } = useSelectedLang();
 
   const fetchVerbs = async (rootId: number): Promise<void> => {
     setLoading(true);
@@ -35,6 +37,11 @@ function VerbsPanel() {
     }
   }, [selectedRoot]);
 
+  function getTranslationForLang(VSDto: VerbShortDto): string {
+    const langcode = lang?.code ?? "EN";
+    return VSDto.translations.get(langcode)?? "no translation";
+  }
+
   const renderVerbList = () => (
     <ul>
       {dtos.map((dto: VerbShortDto) => (
@@ -43,7 +50,7 @@ function VerbsPanel() {
           onClick={() => setVerb(dto)}
           className="cursor-pointer hover:bg-gray-100"
         >
-          <div className="text-sm text-center">{dto.value}</div>
+          <div className="text-sm text-center truncate">{`${dto.value} (${getTranslationForLang(dto)})`}</div>
           <Separator className="my-2" />
         </li>
       ))}
@@ -56,7 +63,10 @@ function VerbsPanel() {
         <CreateVerbDialogButton
           enabled={!!selectedRoot}
           onSuccess={(id: number, value: string, version: number) => {
-            setDtos((prev) => [...prev, { id, value, version }]);
+            setDtos((prev) => [
+              ...prev,
+              new VerbShortDto(id, value, version, new Map()),
+            ]);
           }}
         />
       </div>
@@ -67,7 +77,9 @@ function VerbsPanel() {
             ? renderSkeleton(15)
             : dtos.length > 0
               ? renderVerbList()
-              : renderMessageCentered(`Nothing found for '${selectedRoot?.name}' 😕`)}
+              : renderMessageCentered(
+                  `Nothing found for '${selectedRoot?.name}' 😕`,
+                )}
       </ScrollArea>
     </div>
   );
