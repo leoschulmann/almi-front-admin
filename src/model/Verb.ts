@@ -1,8 +1,9 @@
-import { Expose } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 import { Binyan } from "@/model/Binyan.ts";
 import { Root } from "@/model/Root.ts";
 import { Gizrah } from "@/model/Gizrah.ts";
 import { Preposition } from "@/model/Preposition.ts";
+import { VerbTranslation } from "@/model/VerbTranslation.ts";
 
 export class Verb {
   readonly id: number;
@@ -25,8 +26,9 @@ export class Verb {
   @Expose({ name: "p" })
   readonly prepositions: Preposition[];
 
-  // @Expose({ name: "t" })
-  // readonly translations: any;
+  @Expose({ name: "t" })
+  @Type(() => VerbTranslation)
+  readonly translations: VerbTranslation[];
 
   constructor(
     id?: number,
@@ -36,6 +38,7 @@ export class Verb {
     root?: Root,
     gizrahs?: Gizrah[],
     prepositions?: Preposition[],
+    translations?: VerbTranslation[],
   ) {
     this.id = id ?? 0;
     this.value = value ?? "";
@@ -44,5 +47,6 @@ export class Verb {
     this.root = root ?? new Root();
     this.gizrahs = gizrahs ?? [];
     this.prepositions = prepositions ?? [];
+    this.translations = translations ?? [];
   }
 }

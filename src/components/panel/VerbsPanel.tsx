@@ -8,6 +8,7 @@ import { CreateVerbDialogButton } from "@/components/CreateVerbDialogButton.tsx"
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
+import { VerbTranslation } from "@/model/VerbTranslation.ts";
 
 function VerbsPanel() {
   const { selectedRoot } = useSelectedRoot();
@@ -39,7 +40,7 @@ function VerbsPanel() {
 
   function getTranslationForLang(VSDto: VerbShortDto): string {
     const langcode = lang?.code ?? "EN";
-    return VSDto.translations.get(langcode)?? "no translation";
+    return VSDto.translations[langcode] ?? "no translation";
   }
 
   const renderVerbList = () => (
@@ -57,17 +58,24 @@ function VerbsPanel() {
     </ul>
   );
 
+  function onSuccess(
+    id: number,
+    value: string,
+    version: number,
+    translations: VerbTranslation[],
+  ) {
+    setDtos((prev) => [
+      ...prev,
+      new VerbShortDto(id, value, version, translations),
+    ]);
+  }
+
   return (
     <div className="h-screen w-48 flex flex-col ">
       <div className="flex-shrink-0 flex items-center justify-between p-3">
         <CreateVerbDialogButton
           enabled={!!selectedRoot}
-          onSuccess={(id: number, value: string, version: number) => {
-            setDtos((prev) => [
-              ...prev,
-              new VerbShortDto(id, value, version, new Map()),
-            ]);
-          }}
+          onSuccess={onSuccess}
         />
       </div>
       <ScrollArea className="flex-grow p-3 overflow-y-auto border-r">
