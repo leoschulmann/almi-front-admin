@@ -7,8 +7,11 @@ import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
 import { VerbForm } from "@/model/VerbForm.ts";
 import type { Tense } from "@/model/Tense.ts";
 import {
-  getForTense,
-  getIcon,
+  FUTURE_VERB_FORM_TEMPLATES,
+  IMPERATIVE_VERB_FORM_TEMPLATES,
+  INFINITIVE_VERB_FORM_TEMPLATE,
+  PAST_VERB_FORM_TEMPLATES,
+  PRESENT_VERB_FORM_TEMPLATES,
   TupleForTenses,
 } from "@/util/VerbFormCombinator.ts";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
@@ -21,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
+import { VerbFormComponent } from "@/components/VerbFormComponent.tsx";
 
 export function VerbFormsPanel() {
   const { verb } = useSelectedVerb();
@@ -55,104 +59,60 @@ export function VerbFormsPanel() {
     }
   }, [verb]);
 
+  function mapToComponent(tense: Tense, verbForms: VerbForm[]) {
+    return (template: TupleForTenses) => {
+      const vform = verbForms
+        .filter((vf) => vf.tense === tense)
+        .find(
+          (vf) =>
+            template.person === vf.person &&
+            template.gender === vf.gender &&
+            template.plurality === vf.plurality,
+        );
+
+      return (
+        <VerbFormComponent vform={vform} tense={tense} template={template} />
+      );
+    };
+  }
+
   function renderVerbForms() {
     const content: ReactElement[] = [];
 
     // infinitive
     content.push(renderTitle("Infinitive"));
 
-    processTense(
-      verbForms.filter((vf) => vf.tense === "INFINITIVE"),
-      "INFINITIVE",
-    ).forEach((e) => content.push(e));
+    INFINITIVE_VERB_FORM_TEMPLATE.map(
+      mapToComponent("INFINITIVE", verbForms),
+    ).forEach((vfc) => content.push(vfc));
 
     // Present
     content.push(renderTitle("Present"));
 
-    processTense(
-      verbForms.filter((vf) => vf.tense === "PRESENT"),
-      "PRESENT",
-    ).forEach((e) => content.push(e));
+    PRESENT_VERB_FORM_TEMPLATES.map(
+      mapToComponent("PRESENT", verbForms),
+    ).forEach((vfc) => content.push(vfc));
 
     // Past
     content.push(renderTitle("Past"));
-    processTense(
-      verbForms.filter((vf) => vf.tense === "PAST"),
-      "PAST",
-    ).forEach((e) => content.push(e));
+    PAST_VERB_FORM_TEMPLATES.map(mapToComponent("PAST", verbForms)).forEach(
+      (vfc) => content.push(vfc),
+    );
 
     // future
     content.push(renderTitle("Future"));
-    processTense(
-      verbForms.filter((vf) => vf.tense === "FUTURE"),
-      "FUTURE",
-    ).forEach((e) => content.push(e));
+
+    FUTURE_VERB_FORM_TEMPLATES.map(mapToComponent("FUTURE", verbForms)).forEach(
+      (vfc) => content.push(vfc),
+    );
 
     // imperative
     content.push(renderTitle("Imperative"));
-    processTense(
-      verbForms.filter((vf) => vf.tense === "IMPERATIVE"),
-      "IMPERATIVE",
-    ).forEach((e) => content.push(e));
+    IMPERATIVE_VERB_FORM_TEMPLATES.map(
+      mapToComponent("IMPERATIVE", verbForms),
+    ).forEach((vfc) => content.push(vfc));
 
     return <ul>{content}</ul>;
-  }
-
-  function processTense(forms: VerbForm[], tense: Tense): ReactElement[] {
-    const combinations: TupleForTenses[] = getForTense(tense);
-
-    return combinations.map((combination) => {
-      const verbForm: VerbForm | undefined = forms.find((vf) => {
-        return (
-          vf.person === combination.person &&
-          vf.gender === combination.gender &&
-          vf.plurality === combination.plurality
-        );
-      });
-
-      if (verbForm) {
-        return renderVerbForm(verbForm);
-      } else {
-        return createComponentForMissingForm(combination, tense);
-      }
-    });
-  }
-
-  function renderVerbForm(vf: VerbForm): ReactElement {
-    return (
-      <li
-        key={`${vf.tense}${vf.gender}${vf.person}${vf.plurality}`}
-        className="flex items-center gap-3"
-      >
-        <img
-          src={getIcon(vf.gender, vf.person, vf.plurality)}
-          className="w-6 h-6"
-          alt={`gender: ${vf.gender}, person: ${vf.person}, plurality: ${vf.plurality}`}
-        ></img>
-        <span className="font-rubik font-semibold text-xl">{vf.value}</span>
-        {vf.transliterations.map((t) => t.lang + ":" + t.value).join(", ")}
-      </li>
-    );
-  }
-
-  function createComponentForMissingForm(
-    { person, gender, plurality, optional }: TupleForTenses,
-    tense: Tense,
-  ): ReactElement {
-    return (
-      <li
-        key={`${tense}${gender}${person}${plurality}`}
-        className="flex items-center gap-3"
-      >
-        <img
-          src={getIcon(gender, person, plurality)}
-          className="w-6 h-6"
-          alt={`gender: ${gender}, person: ${person}, plurality: ${plurality}`}
-        ></img>
-        Missing verb form for {person}, {gender}, {plurality}{" "}
-        {optional ? "[optional]" : ""}
-      </li>
-    );
   }
 
   function renderTitle(title: string) {
@@ -208,9 +168,7 @@ export function VerbFormsPanel() {
           ? renderMessageCentered("Select a verb")
           : isLoading
             ? renderSkeleton(15)
-            : verbForms.length > 0
-              ? renderVerbForms()
-              : renderMessageCentered("No forms ☹️")}
+            : renderVerbForms()}
       </ScrollArea>
     </div>
   );

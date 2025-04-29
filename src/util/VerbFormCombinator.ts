@@ -1,7 +1,6 @@
 import { GrammaticalGender } from "@/model/GrammaticalGender.ts";
 import { GrammaticalPerson } from "@/model/GrammaticalPerson.ts";
 import { Plurality } from "@/model/Plurality.ts";
-import { Tense } from "@/model/Tense.ts";
 
 export class TupleForTenses {
   constructor(
@@ -12,55 +11,52 @@ export class TupleForTenses {
   ) {}
 }
 
-export function getForTense(tense: Tense): TupleForTenses[] {
-  switch (tense) {
-    case "PRESENT":
-      return [
-        new TupleForTenses("MASCULINE", "NONE", "SINGULAR"),
-        new TupleForTenses("FEMININE", "NONE", "SINGULAR"),
-        new TupleForTenses("MASCULINE", "NONE", "PLURAL"),
-        new TupleForTenses("FEMININE", "NONE", "PLURAL"),
-      ];
-    case "PAST":
-      return [
-        new TupleForTenses("NONE", "FIRST", "SINGULAR"),
-        new TupleForTenses("NONE", "FIRST", "PLURAL"),
+export const PRESENT_VERB_FORM_TEMPLATES = [
+  new TupleForTenses("MASCULINE", "NONE", "SINGULAR"),
+  new TupleForTenses("FEMININE", "NONE", "SINGULAR"),
+  new TupleForTenses("MASCULINE", "NONE", "PLURAL"),
+  new TupleForTenses("FEMININE", "NONE", "PLURAL"),
+];
 
-        new TupleForTenses("MASCULINE", "SECOND", "SINGULAR"),
-        new TupleForTenses("FEMININE", "SECOND", "SINGULAR"),
-        new TupleForTenses("MASCULINE", "SECOND", "PLURAL"),
-        new TupleForTenses("FEMININE", "SECOND", "PLURAL"),
+export const PAST_VERB_FORM_TEMPLATES = [
+  new TupleForTenses("NONE", "FIRST", "SINGULAR"),
+  new TupleForTenses("NONE", "FIRST", "PLURAL"),
 
-        new TupleForTenses("MASCULINE", "THIRD", "SINGULAR"),
-        new TupleForTenses("FEMININE", "THIRD", "SINGULAR"),
-        new TupleForTenses("NONE", "THIRD", "PLURAL"),
-      ];
-    case "FUTURE":
-      return [
-        new TupleForTenses("NONE", "FIRST", "SINGULAR"),
-        new TupleForTenses("NONE", "FIRST", "PLURAL"),
+  new TupleForTenses("MASCULINE", "SECOND", "SINGULAR"),
+  new TupleForTenses("FEMININE", "SECOND", "SINGULAR"),
+  new TupleForTenses("MASCULINE", "SECOND", "PLURAL"),
+  new TupleForTenses("FEMININE", "SECOND", "PLURAL"),
 
-        new TupleForTenses("MASCULINE", "SECOND", "SINGULAR"),
-        new TupleForTenses("FEMININE", "SECOND", "SINGULAR"),
-        new TupleForTenses("MASCULINE", "SECOND", "PLURAL"),
-        new TupleForTenses("FEMININE", "SECOND", "PLURAL", true),
+  new TupleForTenses("MASCULINE", "THIRD", "SINGULAR"),
+  new TupleForTenses("FEMININE", "THIRD", "SINGULAR"),
+  new TupleForTenses("NONE", "THIRD", "PLURAL"),
+];
 
-        new TupleForTenses("MASCULINE", "THIRD", "SINGULAR"),
-        new TupleForTenses("FEMININE", "THIRD", "SINGULAR"),
-        new TupleForTenses("MASCULINE", "THIRD", "PLURAL"),
-        new TupleForTenses("FEMININE", "THIRD", "PLURAL", true),
-      ];
-    case "IMPERATIVE":
-      return [
-        new TupleForTenses("MASCULINE", "NONE", "SINGULAR"),
-        new TupleForTenses("FEMININE", "NONE", "SINGULAR"),
-        new TupleForTenses("MASCULINE", "NONE", "PLURAL"),
-        new TupleForTenses("FEMININE", "NONE", "PLURAL", true),
-      ];
-    case "INFINITIVE":
-      return [new TupleForTenses("NONE", "NONE", "NONE")];
-  }
-}
+export const FUTURE_VERB_FORM_TEMPLATES = [
+  new TupleForTenses("NONE", "FIRST", "SINGULAR"),
+  new TupleForTenses("NONE", "FIRST", "PLURAL"),
+
+  new TupleForTenses("MASCULINE", "SECOND", "SINGULAR"),
+  new TupleForTenses("FEMININE", "SECOND", "SINGULAR"),
+  new TupleForTenses("MASCULINE", "SECOND", "PLURAL"),
+  new TupleForTenses("FEMININE", "SECOND", "PLURAL", true),
+
+  new TupleForTenses("MASCULINE", "THIRD", "SINGULAR"),
+  new TupleForTenses("FEMININE", "THIRD", "SINGULAR"),
+  new TupleForTenses("MASCULINE", "THIRD", "PLURAL"),
+  new TupleForTenses("FEMININE", "THIRD", "PLURAL", true),
+];
+
+export const IMPERATIVE_VERB_FORM_TEMPLATES = [
+  new TupleForTenses("MASCULINE", "NONE", "SINGULAR"),
+  new TupleForTenses("FEMININE", "NONE", "SINGULAR"),
+  new TupleForTenses("MASCULINE", "NONE", "PLURAL"),
+  new TupleForTenses("FEMININE", "NONE", "PLURAL", true),
+];
+
+export const INFINITIVE_VERB_FORM_TEMPLATE = [
+  new TupleForTenses("NONE", "NONE", "NONE"),
+];
 
 export function getIcon(
   gender: GrammaticalGender,
