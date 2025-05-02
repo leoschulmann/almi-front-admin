@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
-import { VerbFormComponent } from "@/components/VerbFormComponent.tsx";
+import { VerbFormListItem } from "@/components/VerbFormListItem.tsx";
 
 export function VerbFormsPanel() {
   const { verb } = useSelectedVerb();
@@ -71,9 +71,23 @@ export function VerbFormsPanel() {
         );
 
       return (
-        <VerbFormComponent vform={vform} tense={tense} template={template} />
+        <VerbFormListItem vform={vform} tense={tense} template={template} />
       );
     };
+  }
+
+  function renderTitle(title: string) {
+    return (
+      <li key={`title-${title}`}>
+        <div className="flex items-center gap-3">
+          <div className="h-0.5 w-1/24 bg-[#FF006E]" />
+          <div className="text-2xl font-normal font-noto-sans text-[#FF006E] italic text-left">
+            {title}
+          </div>
+          <div className="h-0.5 w-1/24 bg-[#FF006E]" />
+        </div>
+      </li>
+    );
   }
 
   function renderVerbForms() {
@@ -113,22 +127,6 @@ export function VerbFormsPanel() {
     ).forEach((vfc) => content.push(vfc));
 
     return <ul>{content}</ul>;
-  }
-
-  function renderTitle(title: string) {
-    return (
-      // <div>
-      <li key={`title-${title}`}>
-        <div className="flex items-center gap-3">
-          <div className="h-0.5 w-1/24 bg-[#FF006E]" />
-          <div className="text-2xl font-normal font-noto-sans text-[#FF006E] italic text-left">
-            {title}
-          </div>
-          <div className="h-0.5 w-1/24 bg-[#FF006E]" />
-        </div>
-      </li>
-      // </div>
-    );
   }
 
   return (

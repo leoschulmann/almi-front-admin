@@ -1,4 +1,8 @@
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { GrammaticalGender } from "@/model/GrammaticalGender.ts";
+import { GrammaticalPerson } from "@/model/GrammaticalPerson.ts";
+import { Plurality } from "@/model/Plurality.ts";
+import { getIcon } from "@/util/VerbFormCombinator.ts";
 
 export function renderMessageCentered(message: string) {
   return (
@@ -20,5 +24,19 @@ export function renderSkeleton(count: number = 30) {
         />
       ))}
     </div>
+  );
+}
+
+export function renderIcon(
+  gender: GrammaticalGender,
+  person: GrammaticalPerson,
+  plurality: Plurality,
+) {
+  return (
+    <img
+      src={getIcon(gender, person, plurality)}
+      className="w-6 h-6"
+      alt={`gender: ${gender}, person: ${person}, plurality: ${plurality}`}
+    ></img>
   );
 }

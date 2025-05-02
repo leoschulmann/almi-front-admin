@@ -109,3 +109,20 @@ export function getIcon(
 
   return "/svg/inf.svg";
 }
+
+export const generatePlaceholder = (
+  gender: GrammaticalGender,
+  person: GrammaticalPerson,
+  plurality: Plurality,
+): string => {
+  if (gender === "NONE" && person === "NONE" && plurality === "NONE") {
+    return "INFINITIVE";
+  }
+
+  const parts: string[] = [];
+  if (gender !== "NONE") parts.push(gender);
+  if (person !== "NONE") parts.push(person);
+  if (plurality !== "NONE") parts.push(plurality);
+
+  return parts.join(" ");
+};
