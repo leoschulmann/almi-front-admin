@@ -4,14 +4,7 @@ import {
   generatePlaceholder,
   TupleForTenses,
 } from "@/util/VerbFormCombinator.ts";
-import { Input } from "@/components/ui/input.tsx";
-import { Save, TriangleAlert } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -24,6 +17,7 @@ import {
 } from "@/model/CreateVerbForm.ts";
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { renderIcon } from "@/util/Common.tsx";
+import { InputWithWarning } from "@/components/InputWithWarning.tsx";
 
 export function VerbFormListItem({
   vform,
@@ -88,6 +82,7 @@ export function VerbFormListItem({
       setInitialVerbValue(verbValue);
       setInitialTranslitValue(translitValue);
       setHasChanges(false);
+      setSending(false);
     }
   };
 
@@ -109,65 +104,49 @@ export function VerbFormListItem({
           </div>
         ) : (
           <div className="flex items-center gap-3">
-            <Input
+            <InputWithWarning
               type={"text"}
-              className={"w-60"}
+              className={"w-64"}
               placeholder={generatePlaceholder(
                 template.gender,
                 template.person,
                 template.plurality,
               )}
               value={verbValue}
-              onChange={(e) => {
-                setVerbValue(e.target.value);
-              }}
+              onChange={(e) => setVerbValue(e.target.value)}
+              warningMessage="Missing verb value"
+              showWarning={verbValue.trim() === ""}
+              textClassName="font-rubik font-semibold italic !text-2xl text-neutral-800"
+              placeholderClassName="placeholder:text-sm placeholder:not-italic placeholder:font-normal"
             />
-            {verbValue.trim() === "" && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <TriangleAlert className="h-5 w-5 text-orange-600" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Пустая форма глагола</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
 
-            <Input
+            <InputWithWarning
               type={"text"}
-              className={"w-60"}
+              className={"w-64"}
               placeholder={`Transliterations for ${lang?.name}`}
               value={translitValue}
               onChange={(e) => {
                 setTranslitValue(e.target.value);
               }}
+              showWarning={translitValue.trim() === ""}
+              warningMessage="Missing transliteration"
             />
-            {translitValue.trim() === "" && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <TriangleAlert className="h-5 w-5 text-orange-600" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Empty transliteration</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+
+            {hasChanges ? (
+              <Button
+                variant="outline"
+                onClick={handleSave}
+                className={hasChanges ? "bg-blue-50" : ""}
+              >
+                {sending ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-black"></div>
+                ) : (
+                  <Save className={hasChanges ? "text-blue-500" : ""} />
+                )}
+              </Button>
+            ) : (
+              <div />
             )}
-            <Button
-              variant="outline"
-              disabled={!hasChanges}
-              onClick={handleSave}
-              className={hasChanges ? "bg-blue-50" : ""}
-            >
-              {sending ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
-              ) : (
-                <Save className={hasChanges ? "text-blue-500" : ""} />
-              )}
-            </Button>
           </div>
         )}
       </div>
