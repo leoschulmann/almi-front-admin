@@ -30,8 +30,10 @@ export function VerbFormListItem({
 }) {
   const { lang } = useSelectedLang();
   const { verb } = useSelectedVerb();
-  const [verbValue, setVerbValue] = useState("");
-  const [translitValue, setTranslitValue] = useState("");
+  const [verbValue, setVerbValue] = useState(vform?.value ?? "");
+  const initialTransliteration =
+    vform?.transliterations.find((t) => t.lang === lang?.code)?.value ?? "";
+  const [translitValue, setTranslitValue] = useState(initialTransliteration);
   const [initialVerbValue, setInitialVerbValue] = useState("");
   const [initialTranslitValue, setInitialTranslitValue] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
@@ -90,64 +92,47 @@ export function VerbFormListItem({
     <li
       key={`${tense}-${template.gender}-${template.person}-${template.plurality}`}
     >
-      <div className={"pt-1 pb-1 flex items-center gap-2"}>
+      <div className={"pt-1 pb-1 flex items-center gap-3"}>
+        <InputWithWarning
+          type={"text"}
+          className={"w-64"}
+          placeholder={generatePlaceholder(
+            template.gender,
+            template.person,
+            template.plurality,
+          )}
+          value={verbValue}
+          onChange={(e) => setVerbValue(e.target.value)}
+          warningMessage="Missing verb value"
+          showWarning={verbValue.trim() === ""}
+          textClassName="font-rubik font-semibold italic !text-2xl text-neutral-800"
+          placeholderClassName="placeholder:text-sm placeholder:not-italic placeholder:font-normal"
+        />
+
         {renderIcon(template.gender, template.person, template.plurality)}
 
-        {vform ? ( // todo finish
-          <div className="flex items-center gap-3">
-            <span className="font-rubik font-semibold text-xl">
-              {vform.value}
-            </span>
-            {vform.transliterations
-              .map((t) => t.lang + ":" + t.value)
-              .join(", ")}
-          </div>
-        ) : (
-          <div className="flex items-center gap-3">
-            <InputWithWarning
-              type={"text"}
-              className={"w-64"}
-              placeholder={generatePlaceholder(
-                template.gender,
-                template.person,
-                template.plurality,
-              )}
-              value={verbValue}
-              onChange={(e) => setVerbValue(e.target.value)}
-              warningMessage="Missing verb value"
-              showWarning={verbValue.trim() === ""}
-              textClassName="font-rubik font-semibold italic !text-2xl text-neutral-800"
-              placeholderClassName="placeholder:text-sm placeholder:not-italic placeholder:font-normal"
-            />
+        <InputWithWarning
+          type={"text"}
+          className={"w-64"}
+          placeholder={`Transliteration for ${lang?.name}`}
+          value={translitValue}
+          onChange={(e) => {
+            setTranslitValue(e.target.value);
+          }}
+          showWarning={translitValue.trim() === ""}
+          warningMessage="Missing transliteration"
+        />
 
-            <InputWithWarning
-              type={"text"}
-              className={"w-64"}
-              placeholder={`Transliterations for ${lang?.name}`}
-              value={translitValue}
-              onChange={(e) => {
-                setTranslitValue(e.target.value);
-              }}
-              showWarning={translitValue.trim() === ""}
-              warningMessage="Missing transliteration"
-            />
-
-            {hasChanges ? (
-              <Button
-                variant="outline"
-                onClick={handleSave}
-                className={hasChanges ? "bg-blue-50" : ""}
-              >
-                {sending ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-black"></div>
-                ) : (
-                  <Save className={hasChanges ? "text-blue-500" : ""} />
-                )}
-              </Button>
+        {hasChanges ? (
+          <Button variant="outline" onClick={handleSave} className="bg-blue-50">
+            {sending ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-black"></div>
             ) : (
-              <div />
+              <Save className="text-blue-500" />
             )}
-          </div>
+          </Button>
+        ) : (
+          <div />
         )}
       </div>
     </li>

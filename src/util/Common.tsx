@@ -3,6 +3,14 @@ import { GrammaticalGender } from "@/model/GrammaticalGender.ts";
 import { GrammaticalPerson } from "@/model/GrammaticalPerson.ts";
 import { Plurality } from "@/model/Plurality.ts";
 import { getIcon } from "@/util/VerbFormCombinator.ts";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
+import { TriangleAlert } from "lucide-react";
+import React from "react";
 
 export function renderMessageCentered(message: string) {
   return (
@@ -33,10 +41,19 @@ export function renderIcon(
   plurality: Plurality,
 ) {
   return (
-    <img
-      src={getIcon(gender, person, plurality)}
-      className="w-6 h-6"
-      alt={`gender: ${gender}, person: ${person}, plurality: ${plurality}`}
-    ></img>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>
+          <img
+            src={getIcon(gender, person, plurality)}
+            className="w-6 h-6"
+            alt={`gender: ${gender}, person: ${person}, plurality: ${plurality}`}
+          ></img>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{`gender: ${gender}, person: ${person}, plurality: ${plurality}`}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
