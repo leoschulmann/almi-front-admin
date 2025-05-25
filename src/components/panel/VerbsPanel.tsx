@@ -4,13 +4,18 @@ import { VerbShortDto } from "@/model/VerbShortDto.ts";
 import { useEffect, useState } from "react";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Separator } from "@/components/ui/separator.tsx";
-import { renderSkeleton } from "@/utils.tsx";
 import { CreateVerbDialogButton } from "@/components/CreateVerbDialogButton.tsx";
+import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
+import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
+import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
+import { VerbTranslation } from "@/model/VerbTranslation.ts";
 
-function RootContent() {
+function VerbsPanel() {
   const { selectedRoot } = useSelectedRoot();
   const [dtos, setDtos] = useState<VerbShortDto[]>([]);
   const [isLoading, setLoading] = useState(false);
+  const { setVerb } = useSelectedVerb();
+  const { lang } = useSelectedLang();
 
   const fetchVerbs = async (rootId: number): Promise<void> => {
     setLoading(true);
@@ -33,44 +38,59 @@ function RootContent() {
     }
   }, [selectedRoot]);
 
-  const renderMessage = (message: string) => (
-    <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm text-center">
-      <p>{message}</p>
-    </div>
-  );
+  function getTranslationForLang(VSDto: VerbShortDto): string {
+    const langcode = lang?.code ?? "EN";
+    return VSDto.translations[langcode] ?? "no translation";
+  }
 
   const renderVerbList = () => (
     <ul>
-      {dtos.map(({ id, value }: VerbShortDto) => (
-        <li key={id}>
-          <div className="text-sm text-center">{value}</div>
+      {dtos.map((dto: VerbShortDto) => (
+        <li
+          key={dto.id}
+          onClick={() => setVerb(dto)}
+          className="cursor-pointer hover:bg-gray-100"
+        >
+          <div className="text-sm text-center truncate">{`${dto.value} (${getTranslationForLang(dto)})`}</div>
           <Separator className="my-2" />
         </li>
       ))}
     </ul>
   );
 
+  function onSuccess(
+    id: number,
+    value: string,
+    version: number,
+    translations: VerbTranslation[],
+  ) {
+    setDtos((prev) => [
+      ...prev,
+      new VerbShortDto(id, value, version, translations),
+    ]);
+  }
+
   return (
     <div className="h-screen w-48 flex flex-col ">
       <div className="flex-shrink-0 flex items-center justify-between p-3">
         <CreateVerbDialogButton
           enabled={!!selectedRoot}
-          onSuccess={(id: number, value: string, version: number) => {
-            setDtos((prev) => [...prev, { id, value, version }]);
-          }}
+          onSuccess={onSuccess}
         />
       </div>
       <ScrollArea className="flex-grow p-3 overflow-y-auto border-r">
         {!selectedRoot
-          ? renderMessage("Select a root")
+          ? renderMessageCentered("Select a root")
           : isLoading
             ? renderSkeleton(15)
             : dtos.length > 0
               ? renderVerbList()
-              : renderMessage(`Nothing found for '${selectedRoot?.name}' 😕`)}
+              : renderMessageCentered(
+                  `Nothing found for '${selectedRoot?.name}' 😕`,
+                )}
       </ScrollArea>
     </div>
   );
 }
 
-export { RootContent };
+export { VerbsPanel };

@@ -6,10 +6,10 @@ import { useEffect, useState } from "react";
 import { RootPage } from "@/model/RootPage.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
-import { renderSkeleton } from "@/utils.tsx";
 import { CreateRootDialog } from "@/components/CreateRootDialog.tsx";
+import { renderSkeleton } from "@/util/Common.tsx";
 
-export function RootList() {
+export function AllRootsPanel() {
   const [roots, setRoots] = useState<Root[]>([]);
   const [visibleRoots, setVisibleRoots] = useState<Root[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +54,7 @@ export function RootList() {
       <div className="p-3 flex-shrink-0 flex items-center justify-between">
         <Input
           placeholder="Search..."
-          className="h-9 w-full rounded bg-gray-100 border border-gray-300 mr-3"
+          className="h-9 w-24 rounded bg-gray-100 border border-gray-300 mr-3"
           onChange={(e) => {
             const query = e.target.value.toLowerCase();
             if (!query) {
@@ -84,7 +84,7 @@ export function RootList() {
               <li
                 key={root.id}
                 onClick={() => setSelectedRoot(root)}
-                className="cursor-pointer"
+                className="cursor-pointer hover:bg-gray-100"
               >
                 <div className="text-sm text-center">{root.name}</div>
                 <Separator className="my-2" />

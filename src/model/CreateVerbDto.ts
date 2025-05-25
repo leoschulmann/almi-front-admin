@@ -1,4 +1,4 @@
-import { Expose } from "class-transformer";
+import { Expose, Transform, Type } from "class-transformer";
 import { z } from "zod";
 
 export class CreateVerbDto {
@@ -16,6 +16,9 @@ export class CreateVerbDto {
 
   @Expose({ name: "p" })
   prepositionId: number[];
+
+  @Expose({ name: "t" })
+  translations: Record<string, string> | undefined;
 
   constructor(
     value?: string,
@@ -47,6 +50,7 @@ export const createVerbSchema = z.object({
   binyanId: z.number().min(1, "binyanId required"),
   gizrahId: z.array(z.number()),
   prepositionId: z.array(z.number()),
+  translations: z.record(z.string(), z.string()).optional(),
 });
 
 export type CreateVerbType = z.infer<typeof createVerbSchema>;

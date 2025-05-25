@@ -1,5 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
+
+@theme {
+  --font-noto-sans: 'Noto Sans', sans-serif;
+  --font-rubik: 'Rubik', sans-serif;
+}
 
 @custom-variant dark (&:is(.dark *));
 

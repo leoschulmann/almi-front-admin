@@ -38,17 +38,24 @@ import { DialogDescription } from "@radix-ui/react-dialog";
 import { postData } from "@/util/ApiClient.ts";
 import { Verb } from "@/model/Verb.ts";
 import { plainToInstance } from "class-transformer";
+import { TranslationsField } from "@/components/TranslationsField.tsx";
+import { VerbTranslation } from "@/model/VerbTranslation.ts";
 
 export function CreateVerbDialogButton({
   enabled,
   onSuccess,
 }: {
   enabled: boolean;
-  onSuccess: (id: number, value: string, version: number) => void;
+  onSuccess: (
+    id: number,
+    value: string,
+    version: number,
+    translations: VerbTranslation[],
+  ) => void;
 }) {
   const [isOpen, setOpen] = useState<boolean>(false);
   const [sending, setSending] = useState<boolean>(false);
-  const { binyans, gizrahs, prepositions } = useDictionaryContext();
+  const { binyans, gizrahs, prepositions, langs } = useDictionaryContext();
   const { selectedRoot } = useSelectedRoot();
 
   const defaultVerbData: CreateVerbDto = {
@@ -57,6 +64,7 @@ export function CreateVerbDialogButton({
     binyanId: 1,
     gizrahId: [],
     prepositionId: [],
+    translations: {},
   };
 
   const form = useForm<z.infer<typeof createVerbSchema>>({
@@ -204,6 +212,21 @@ export function CreateVerbDialogButton({
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="translations"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <TranslationsField
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </form>
         </Form>
         <DialogFooter>
@@ -231,7 +254,7 @@ export function CreateVerbDialogButton({
                 );
 
                 const verb: Verb = await postData("verb", payload, Verb);
-                onSuccess(verb.id, verb.value, verb.version);
+                onSuccess(verb.id, verb.value, verb.version, verb.translations);
 
                 setOpen(false);
                 form.reset({ ...defaultVerbData, rootId: selectedRoot?.id });
