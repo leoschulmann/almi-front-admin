@@ -8,8 +8,7 @@ import { Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { postData } from "@/util/ApiClient.ts";
-import { Verb } from "@/model/Verb.ts";
+import { postData, putData } from "@/util/ApiClient.ts";
 import {
   CreateVerbForm,
   toPluralityGender,
@@ -18,6 +17,40 @@ import {
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { renderIcon } from "@/util/Common.tsx";
 import { InputWithWarning } from "@/components/InputWithWarning.tsx";
+import {
+  EditVerbForm,
+  UpdateVerbFormTransliteration,
+} from "@/model/EditVerbForm.ts";
+import { Transliteration } from "@/model/Transliteration.ts";
+import { Lang } from "@/model/Lang.ts";
+
+function getTransliteration(
+  verbForm: VerbForm | undefined,
+  lang: Lang | undefined,
+): Transliteration | undefined {
+  return verbForm?.transliterations.find((t) => t.lang === lang?.code);
+}
+
+function setTransliteration(
+  verbForm: VerbForm,
+  lang: Lang | undefined,
+  translitValue: string,
+): VerbForm {
+  let transliterations = verbForm.transliterations;
+
+  if (getTransliteration(verbForm, lang)) {
+    transliterations = transliterations.map((t) =>
+      t.lang === lang?.code ? { ...t, value: translitValue } : t,
+    );
+  } else {
+    transliterations = [
+      ...transliterations,
+      new Transliteration(-1, translitValue, 0, lang?.code),
+    ];
+  }
+
+  return { ...verbForm, transliterations };
+}
 
 export function VerbFormListItem({
   vform,
@@ -30,60 +63,111 @@ export function VerbFormListItem({
 }) {
   const { lang } = useSelectedLang();
   const { verb } = useSelectedVerb();
-  const [verbValue, setVerbValue] = useState(vform?.value ?? "");
-  const initialTransliteration =
-    vform?.transliterations.find((t) => t.lang === lang?.code)?.value ?? "";
-  const [translitValue, setTranslitValue] = useState(initialTransliteration);
-  const [initialVerbValue, setInitialVerbValue] = useState("");
-  const [initialTranslitValue, setInitialTranslitValue] = useState("");
-  const [hasChanges, setHasChanges] = useState(false);
+
+  const [exists, setExists] = useState(vform !== undefined);
+
+  const [init, setInit] = useState(vform ?? new VerbForm());
+  const [verbForm, setVerbForm] = useState(vform ?? new VerbForm());
+
+  const [showSaveBtn, setShowSaveBtn] = useState(false);
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    const newVerbValue = vform?.value ?? "";
-    setVerbValue(newVerbValue);
-    setInitialVerbValue(newVerbValue);
+    const verbValueChanged: boolean = verbForm.value !== init.value;
+    const translitValueChanged: boolean =
+      getTransliteration(verbForm, lang)?.value !==
+      getTransliteration(init, lang)?.value;
 
-    const transliteration = vform?.transliterations.find(
-      (t) => t.lang === lang?.code,
-    );
-    const newTranslitValue = transliteration?.value ?? "";
-    setTranslitValue(newTranslitValue);
-    setInitialTranslitValue(newTranslitValue);
+    setShowSaveBtn(verbValueChanged || translitValueChanged);
+  }, [verbForm, lang, verb, init]);
 
-    setHasChanges(false);
-  }, [vform, lang, verb]); // !
-
-  useEffect(() => {
-    //TODO: maybe merge with the one above
-    const verbChanged = verbValue !== initialVerbValue;
-    const translitChanged = translitValue !== initialTranslitValue;
-    setHasChanges(verbChanged || translitChanged);
-  }, [verbValue, translitValue, initialVerbValue, initialTranslitValue]);
-
-  const handleSave = async () => {
-    setSending(true);
-
+  const createNewVerbForm = async () => {
     const id = verb?.id;
-    const toTensePerson1 = toTensePerson(tense, template.person);
-    const toPluralityGender1 = toPluralityGender(
+    const tensePerson = toTensePerson(tense, template.person);
+    const pluralityGender = toPluralityGender(
       template.plurality,
       template.gender,
     );
-    const createVerbForm = new CreateVerbForm(
-      id,
-      verbValue,
-      toTensePerson1,
-      toPluralityGender1,
-      [{ first: lang!.code, second: translitValue }],
+
+    const transliteration = getTransliteration(verbForm, lang);
+
+    return await postData(
+      "verb/form",
+      new CreateVerbForm(
+        id,
+        verbForm.value,
+        tensePerson,
+        pluralityGender,
+
+        transliteration
+          ? [
+              {
+                first: transliteration?.lang,
+                second: transliteration?.value,
+              },
+            ]
+          : [],
+      ),
+      VerbForm,
+    );
+  };
+
+  const updateVerbForm = async () => {
+    console.log("updateVerbForm", verbForm);
+    const transliteration = getTransliteration(verbForm, lang);
+    const existingTransliteration = (transliteration?.id ?? -1) >= 0;
+
+    const [newTransliterations, updatedTransliterations] =
+      existingTransliteration
+        ? 
+        [
+            [],
+            [
+              new UpdateVerbFormTransliteration(
+                transliteration!.id,
+                transliteration!.version,
+                transliteration!.value,
+              ),
+            ],
+          ]
+        
+        : [
+            transliteration
+              ? [
+                  {
+                    first: transliteration?.lang ?? "",
+                    second: transliteration?.value ?? "",
+                  },
+                ]
+              : [],
+            [],
+          ];
+    console.log("existingTransliteration", existingTransliteration);
+    console.log("tranlit", transliteration);
+    console.log("updatingtr", updatedTransliterations);
+    console.log("newTransliterations", newTransliterations);
+    
+    const payload = new EditVerbForm(
+      verbForm.id,
+      verbForm.version,
+      verbForm.value,
+      newTransliterations,
+      updatedTransliterations,
     );
 
+    return await putData("verb/form", payload, VerbForm);
+  };
+
+  const handleClickSave = async () => {
+    setSending(true);
+
     try {
-      await postData("verb/form", createVerbForm, Verb); // todo implement
+      vform = await (exists ? updateVerbForm() : createNewVerbForm());
+      setVerbForm(vform);
+      setInit(vform);
+      setExists(true);
     } finally {
-      setInitialVerbValue(verbValue);
-      setInitialTranslitValue(translitValue);
-      setHasChanges(false);
+      setShowSaveBtn(false);
       setSending(false);
     }
   };
@@ -101,10 +185,10 @@ export function VerbFormListItem({
             template.person,
             template.plurality,
           )}
-          value={verbValue}
-          onChange={(e) => setVerbValue(e.target.value)}
+          value={verbForm ? verbForm.value : ""}
+          onChange={(e) => setVerbForm({ ...verbForm, value: e.target.value })}
           warningMessage="Missing verb value"
-          showWarning={verbValue.trim() === ""}
+          showWarning={verbForm.value === ""}
           textClassName="font-rubik font-semibold italic !text-2xl text-neutral-800"
           placeholderClassName="placeholder:text-sm placeholder:not-italic placeholder:font-normal"
         />
@@ -115,16 +199,22 @@ export function VerbFormListItem({
           type={"text"}
           className={"w-64"}
           placeholder={`Transliteration for ${lang?.name}`}
-          value={translitValue}
-          onChange={(e) => {
-            setTranslitValue(e.target.value);
-          }}
-          showWarning={translitValue.trim() === ""}
+          disabled={verbForm.value === ""}
+          value={getTransliteration(verbForm, lang)?.value ?? ""}
+          onChange={(e) =>
+            setVerbForm(setTransliteration(verbForm, lang, e.target.value))
+          }
+          showWarning={getTransliteration(verbForm, lang)?.value.trim() === ""}
           warningMessage="Missing transliteration"
         />
 
-        {hasChanges ? (
-          <Button variant="outline" onClick={handleSave} className="bg-blue-50">
+        {showSaveBtn ? (
+          <Button
+            variant="outline"
+            disabled={verbForm.value === ""}
+            onClick={handleClickSave}
+            className="bg-blue-50"
+          >
             {sending ? (
               <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-black"></div>
             ) : (

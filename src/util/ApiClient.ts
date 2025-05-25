@@ -55,3 +55,20 @@ export async function postData<T extends object | string, R>(
     .json();
   return plainToInstance(model, response);
 }
+
+export async function putData<T extends object, R>(
+  url: string,
+  body: T,
+  model: {
+    new (...args: ConstructorParameters<typeof Object>): R;
+  },
+  options?: Options,
+): Promise<R> {
+  const response = await apiClient
+    .put(url, {
+      ...options,
+      ...{ json: instanceToPlain(body) },
+    })
+    .json();
+  return plainToInstance(model, response);
+}
