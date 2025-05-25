@@ -132,17 +132,12 @@ export function VerbFormsPanel() {
   return (
     <div className="h-screen w-full flex flex-col">
       <div className="p-3 flex items-center gap-3">
-        <Button
-          disabled={true}
-          className="h-9 w-32 justify-center bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          <Plus className="h-5 w-5" /> verb form
-        </Button>
-
         {lang ? (
           <Select
             value={lang.name}
-            onValueChange={(e) => setLang(langs.find((l) => l.name === e))}
+            onValueChange={(e) =>
+              setLang(langs.find((l) => l.name === e) ?? langs[0])
+            }
           >
             <SelectTrigger className="w-36">
               <SelectValue />

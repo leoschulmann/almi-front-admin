@@ -25,31 +25,31 @@ import { Transliteration } from "@/model/Transliteration.ts";
 import { Lang } from "@/model/Lang.ts";
 
 function getTransliteration(
-  verbForm: VerbForm | undefined,
-  lang: Lang | undefined,
+  verbForm: VerbForm,
+  lang: Lang,
 ): Transliteration | undefined {
-  return verbForm?.transliterations.find((t) => t.lang === lang?.code);
+  return verbForm.transliterations.find((t) => t.lang === lang.code);
 }
 
 function setTransliteration(
   verbForm: VerbForm,
-  lang: Lang | undefined,
-  translitValue: string,
+  lang: Lang,
+  value: string,
 ): VerbForm {
-  let transliterations = verbForm.transliterations;
+  let translits = verbForm.transliterations;
 
   if (getTransliteration(verbForm, lang)) {
-    transliterations = transliterations.map((t) =>
-      t.lang === lang?.code ? { ...t, value: translitValue } : t,
+    translits = translits.map((t) =>
+      t.lang === lang.code ? { ...t, value: value } : t,
     );
   } else {
-    transliterations = [
-      ...transliterations,
-      new Transliteration(-1, translitValue, 0, lang?.code),
+    translits = [
+      ...translits,
+      new Transliteration(undefined, value, undefined, lang.code),
     ];
   }
 
-  return { ...verbForm, transliterations };
+  return { ...verbForm, transliterations: translits };
 }
 
 export function VerbFormListItem({
@@ -102,8 +102,8 @@ export function VerbFormListItem({
         transliteration
           ? [
               {
-                first: transliteration?.lang,
-                second: transliteration?.value,
+                first: transliteration.lang,
+                second: transliteration.value,
               },
             ]
           : [],
@@ -113,46 +113,39 @@ export function VerbFormListItem({
   };
 
   const updateVerbForm = async () => {
-    console.log("updateVerbForm", verbForm);
-    const transliteration = getTransliteration(verbForm, lang);
-    const existingTransliteration = (transliteration?.id ?? -1) >= 0;
+    const currentTranslit = getTransliteration(verbForm, lang);
 
-    const [newTransliterations, updatedTransliterations] =
-      existingTransliteration
-        ? 
-        [
-            [],
-            [
-              new UpdateVerbFormTransliteration(
-                transliteration!.id,
-                transliteration!.version,
-                transliteration!.value,
-              ),
-            ],
+    const isExisting =
+      currentTranslit &&
+      currentTranslit.id >= 0 &&
+      currentTranslit.version >= 0;
+
+    const updTranslits = isExisting
+      ? [
+          new UpdateVerbFormTransliteration(
+            currentTranslit.id,
+            currentTranslit.version,
+            currentTranslit.value,
+          ),
+        ]
+      : [];
+
+    const newTranslits =
+      !isExisting && currentTranslit
+        ? [
+            {
+              first: currentTranslit.lang,
+              second: currentTranslit.value,
+            },
           ]
-        
-        : [
-            transliteration
-              ? [
-                  {
-                    first: transliteration?.lang ?? "",
-                    second: transliteration?.value ?? "",
-                  },
-                ]
-              : [],
-            [],
-          ];
-    console.log("existingTransliteration", existingTransliteration);
-    console.log("tranlit", transliteration);
-    console.log("updatingtr", updatedTransliterations);
-    console.log("newTransliterations", newTransliterations);
-    
+        : [];
+
     const payload = new EditVerbForm(
       verbForm.id,
       verbForm.version,
       verbForm.value,
-      newTransliterations,
-      updatedTransliterations,
+      newTranslits,
+      updTranslits,
     );
 
     return await putData("verb/form", payload, VerbForm);
@@ -162,9 +155,11 @@ export function VerbFormListItem({
     setSending(true);
 
     try {
-      vform = await (exists ? updateVerbForm() : createNewVerbForm());
-      setVerbForm(vform);
-      setInit(vform);
+      const serverResult: VerbForm = await (exists
+        ? updateVerbForm()
+        : createNewVerbForm());
+      setVerbForm(serverResult);
+      setInit(serverResult);
       setExists(true);
     } finally {
       setShowSaveBtn(false);
@@ -198,7 +193,7 @@ export function VerbFormListItem({
         <InputWithWarning
           type={"text"}
           className={"w-64"}
-          placeholder={`Transliteration for ${lang?.name}`}
+          placeholder={`Transliteration for ${lang.name}`}
           disabled={verbForm.value === ""}
           value={getTransliteration(verbForm, lang)?.value ?? ""}
           onChange={(e) =>

@@ -12,9 +12,9 @@ export class Transliteration {
   readonly lang: string;
   
   constructor(id?: number, value?: string, version?: number, lang?: string) {
-    this.id = id ?? 0;
+    this.id = id ?? -1;
     this.value = value ?? "";
-    this.version = version ?? 0;
+    this.version = version ?? -1;
     this.lang = lang ?? "EN";
   }
 }

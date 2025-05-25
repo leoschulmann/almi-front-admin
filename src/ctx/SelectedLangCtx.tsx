@@ -2,14 +2,14 @@ import { Lang } from "@/model/Lang.ts";
 import { createContext, ReactNode, useContext, useState } from "react";
 
 interface SelectedLangCtx {
-  lang: Lang | undefined;
-  setLang: (lang: Lang | undefined) => void;
+  lang: Lang;
+  setLang: (lang: Lang) => void;
 }
 
 const SelectedLangCtx = createContext<SelectedLangCtx | undefined>(undefined);
 
 export function SelectedLangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang | undefined>(undefined);
+  const [lang, setLang] = useState<Lang>(new Lang("foo", "bar"));
 
   return (
     <SelectedLangCtx.Provider value={{ lang, setLang }}>
