@@ -23,6 +23,8 @@ import {
 } from "@/model/EditVerbForm.ts";
 import { Transliteration } from "@/model/Transliteration.ts";
 import { Lang } from "@/model/Lang.ts";
+import { EditVerbDto } from "@/model/EditVerbDto.ts";
+import { VerbShortDto } from "@/model/VerbShortDto.ts";
 
 function getTransliteration(
   verbForm: VerbForm,
@@ -62,7 +64,7 @@ export function VerbFormListItem({
   template: TupleForTenses;
 }) {
   const { lang } = useSelectedLang();
-  const { verb } = useSelectedVerb();
+  const { setVerb, verb } = useSelectedVerb();
 
   const [exists, setExists] = useState(vform !== undefined);
 
@@ -155,11 +157,28 @@ export function VerbFormListItem({
     setSending(true);
 
     try {
-      const serverResult: VerbForm = await (exists
-        ? updateVerbForm()
-        : createNewVerbForm());
-      setVerbForm(serverResult);
-      setInit(serverResult);
+      const [upsertVerbFormResponse, updateVerbResponse] = await Promise.all([
+        exists ? updateVerbForm() : createNewVerbForm(),
+        
+        tense === "INFINITIVE" // form 'infinitive' eq verb value
+          ? putData(
+              "verb",
+              new EditVerbDto(verb.id, verb.version, verbForm.value),
+              VerbShortDto,
+            )
+          : Promise.resolve(null),
+      ]);
+
+      if (updateVerbResponse) {
+        setVerb({
+          ...verb,
+          version: updateVerbResponse.version,
+          value: updateVerbResponse.value,
+        });
+      }
+
+      setVerbForm(upsertVerbFormResponse);
+      setInit(upsertVerbFormResponse);
       setExists(true);
     } finally {
       setShowSaveBtn(false);

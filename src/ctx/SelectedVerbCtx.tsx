@@ -1,15 +1,15 @@
 import { VerbShortDto } from "@/model/VerbShortDto.ts";
-import {createContext, ReactNode, useContext, useState} from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 
 interface SelectedVerbValue {
-  verb: VerbShortDto | null;
-  setVerb: (verb: VerbShortDto | null) => void;
+  verb: VerbShortDto;
+  setVerb: (verb: VerbShortDto) => void;
 }
 
 const SelectedVerbCtx = createContext<SelectedVerbValue | null>(null);
 
 export function SelectedVerbProvider({ children }: { children: ReactNode }) {
-  const [verb, setVerb] = useState<VerbShortDto | null>(null);
+  const [verb, setVerb] = useState<VerbShortDto>(new VerbShortDto());
 
   return (
     <SelectedVerbCtx.Provider value={{ verb, setVerb }}>
@@ -21,7 +21,9 @@ export function SelectedVerbProvider({ children }: { children: ReactNode }) {
 export const useSelectedVerb = () => {
   const context = useContext(SelectedVerbCtx);
   if (!context) {
-    throw new Error("useSelectedVerb must be used within a SelectedVerbProvider");
+    throw new Error(
+      "useSelectedVerb must be used within a SelectedVerbProvider",
+    );
   }
   return context;
 };

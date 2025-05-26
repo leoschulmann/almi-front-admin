@@ -47,7 +47,7 @@ export function AllRootsPanel() {
     };
   }, [shouldReload]);
 
-  const { setSelectedRoot } = useSelectedRoot();
+  const { selectedRoot, setSelectedRoot } = useSelectedRoot();
 
   return (
     <div className="h-screen w-48 flex flex-col">
@@ -84,9 +84,14 @@ export function AllRootsPanel() {
               <li
                 key={root.id}
                 onClick={() => setSelectedRoot(root)}
-                className="cursor-pointer hover:bg-gray-100"
+                className="cursor-pointer"
               >
-                <div className="text-sm text-center">{root.name}</div>
+                <div
+                  className={`text-sm text-center hover:bg-gray-100 
+                  ${selectedRoot?.id === root.id ? "font-bold bg-gray-100" : ""}`}
+                >
+                  {root.name}
+                </div>
                 <Separator className="my-2" />
               </li>
             ))}

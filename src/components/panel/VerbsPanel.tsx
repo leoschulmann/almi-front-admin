@@ -14,7 +14,7 @@ function VerbsPanel() {
   const { selectedRoot } = useSelectedRoot();
   const [dtos, setDtos] = useState<VerbShortDto[]>([]);
   const [isLoading, setLoading] = useState(false);
-  const { setVerb } = useSelectedVerb();
+  const { setVerb, verb } = useSelectedVerb();
   const { lang } = useSelectedLang();
 
   const fetchVerbs = async (rootId: number): Promise<void> => {
@@ -36,7 +36,7 @@ function VerbsPanel() {
     if (selectedRoot) {
       void fetchVerbs(selectedRoot.id);
     }
-  }, [selectedRoot]);
+  }, [selectedRoot, verb]);
 
   function getTranslationForLang(VSDto: VerbShortDto): string {
     const langcode = lang?.code ?? "EN";
@@ -49,9 +49,12 @@ function VerbsPanel() {
         <li
           key={dto.id}
           onClick={() => setVerb(dto)}
-          className="cursor-pointer hover:bg-gray-100"
+          className="cursor-pointer"
         >
-          <div className="text-sm text-center truncate">{`${dto.value} (${getTranslationForLang(dto)})`}</div>
+          <div
+            className={`text-sm text-center truncate hover:bg-gray-100  
+            ${verb?.id === dto.id ? "font-bold bg-gray-100" : ""}`}
+          >{`${dto.value} (${getTranslationForLang(dto)})`}</div>
           <Separator className="my-2" />
         </li>
       ))}

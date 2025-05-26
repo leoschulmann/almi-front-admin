@@ -1,8 +1,6 @@
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { ReactElement, useEffect, useState } from "react";
 import { getDataVector } from "@/util/ApiClient.ts";
-import { Button } from "@/components/ui/button.tsx";
-import { Plus } from "lucide-react";
 import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
 import { VerbForm } from "@/model/VerbForm.ts";
 import type { Tense } from "@/model/Tense.ts";
