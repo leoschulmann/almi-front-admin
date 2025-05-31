@@ -19,6 +19,7 @@ export class CreateVerbDto {
   prepositionId: number[];
 
   @Expose({ name: "t" })
+  @Type(() => VerbTranslation)
   translations: VerbTranslation[];
 
   constructor(
