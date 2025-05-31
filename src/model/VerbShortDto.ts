@@ -1,4 +1,4 @@
-import { Expose } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 import { VerbTranslation } from "@/model/VerbTranslation.ts";
 
 export class VerbShortDto {
@@ -11,7 +11,8 @@ export class VerbShortDto {
   readonly version: number;
 
   @Expose({ name: "t" })
-  readonly translations: Record<string, string>;
+  @Type(() => VerbTranslation)
+  readonly translations: VerbTranslation[];
 
   constructor(
     id?: number,
@@ -22,8 +23,6 @@ export class VerbShortDto {
     this.id = id ?? 0;
     this.value = value ?? "";
     this.version = version ?? 0;
-    this.translations = Object.fromEntries(
-      translations?.map(({ lang, value }) => [lang, value]) ?? [],
-    );
+    this.translations = translations ?? [];
   }
 }

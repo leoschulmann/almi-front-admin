@@ -64,7 +64,7 @@ export function CreateVerbDialogButton({
     binyanId: 1,
     gizrahId: [],
     prepositionId: [],
-    translations: {},
+    translations: [],
   };
 
   const form = useForm<z.infer<typeof createVerbSchema>>({
@@ -219,7 +219,7 @@ export function CreateVerbDialogButton({
                 <FormItem>
                   <FormControl>
                     <TranslationsField
-                      value={field.value}
+                      translations={field.value}
                       onChange={field.onChange}
                     />
                   </FormControl>

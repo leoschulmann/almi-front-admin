@@ -9,6 +9,12 @@ import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { VerbTranslation } from "@/model/VerbTranslation.ts";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 
 function VerbsPanel() {
   const { selectedRoot } = useSelectedRoot();
@@ -38,26 +44,42 @@ function VerbsPanel() {
     }
   }, [selectedRoot, verb]);
 
-  function getTranslationForLang(VSDto: VerbShortDto): string {
-    const langcode = lang?.code ?? "EN";
-    return VSDto.translations[langcode] ?? "no translation";
-  }
-
   const renderVerbList = () => (
     <ul>
-      {dtos.map((dto: VerbShortDto) => (
-        <li
-          key={dto.id}
-          onClick={() => setVerb(dto)}
-          className="cursor-pointer"
-        >
-          <div
-            className={`text-sm text-center truncate hover:bg-gray-100  
-            ${verb?.id === dto.id ? "font-bold bg-gray-100" : ""}`}
-          >{`${dto.value} (${getTranslationForLang(dto)})`}</div>
-          <Separator className="my-2" />
-        </li>
-      ))}
+      {dtos.map((dto: VerbShortDto, index) => {
+        const translations = dto.translations
+          .filter((t) => t.lang === lang.code)
+          .map((t) => t.value);
+        const firstTranslation = translations?.[0];
+        const allTranslations = translations?.join("; ") ?? "";
+        const isSelected = verb?.id === dto.id;
+
+        return (
+          <li
+            key={dto.id}
+            onClick={() => setVerb(dto)}
+            className="cursor-pointer"
+          >
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <div
+                    className={`text-sm text-center truncate hover:bg-gray-100
+                      ${isSelected ? "font-bold bg-gray-100" : ""}`}
+                  >
+                    {dto.value} {firstTranslation && `(${firstTranslation})`}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{allTranslations}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {index < dtos.length - 1 && <Separator className="my-2" />}
+          </li>
+        );
+      })}
     </ul>
   );
 
