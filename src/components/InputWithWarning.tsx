@@ -49,7 +49,12 @@ export function InputWithWarning({
   return (
     <div className="relative flex items-center">
       <Input
-        className={cn(className, textClassName, placeholderClassName)}
+        className={cn(
+          className,
+          textClassName,
+          placeholderClassName,
+          "disabled:border-dashed",
+        )}
         value={value}
         dir={direction}
         {...props}

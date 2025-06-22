@@ -55,26 +55,24 @@ function VerbsPanel() {
         const isSelected = verb?.id === dto.id;
 
         return (
-          <li
-            key={dto.id}
-            onClick={() => setVerb(dto)}
-            className="cursor-pointer"
-          >
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <div
-                    className={`text-sm text-center truncate hover:bg-gray-100
+          <li key={dto.id} onClick={() => setVerb(dto)}>
+            <div
+              className={`text-sm cursor-pointer text-center truncate hover:bg-gray-100
                       ${isSelected ? "font-bold bg-gray-100" : ""}`}
-                  >
-                    {dto.value} {firstTranslation && `(${firstTranslation})`}
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{allTranslations}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            >
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className={"cursor-pointer"}>
+                      {dto.value} {firstTranslation && `(${firstTranslation})`}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{allTranslations}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
 
             {index < dtos.length - 1 && <Separator className="my-2" />}
           </li>
