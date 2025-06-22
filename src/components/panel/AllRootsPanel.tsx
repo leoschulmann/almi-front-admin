@@ -1,13 +1,13 @@
 import { Root } from "@/model/Root.ts";
 import { getDataScalar } from "@/util/ApiClient.ts";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
 import { useEffect, useState } from "react";
 import { RootPage } from "@/model/RootPage.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
 import { CreateRootDialog } from "@/components/CreateRootDialog.tsx";
 import { renderSkeleton } from "@/util/Common.tsx";
+import { HoverableListItem } from "@/components/HoverableListItem.tsx";
 
 export function AllRootsPanel() {
   const [roots, setRoots] = useState<Root[]>([]);
@@ -80,20 +80,16 @@ export function AllRootsPanel() {
 
         {!loading && !error && visibleRoots && (
           <ul>
-            {visibleRoots.map((root) => (
-              <li
-                key={root.id}
-                onClick={() => setSelectedRoot(root)}
-                className="cursor-pointer"
-              >
-                <div
-                  className={`text-sm text-center hover:bg-gray-100 
-                  ${selectedRoot?.id === root.id ? "font-bold bg-gray-100" : ""}`}
-                >
-                  {root.name}
-                </div>
-                <Separator className="my-2" />
-              </li>
+            {visibleRoots.map((root, idx) => (
+              <HoverableListItem
+                clickCallback={() => setSelectedRoot(root)}
+                editCallback={() => {}}
+                deleteCallback={() => {}}
+                displayName={root.name}
+                toolTipDisplay={root.name}
+                isSelected={selectedRoot?.id === root.id}
+                showSeparator={idx < visibleRoots.length - 1}
+              />
             ))}
           </ul>
         )}

@@ -3,18 +3,12 @@ import { getDataVector } from "@/util/ApiClient.ts";
 import { VerbShortDto } from "@/model/VerbShortDto.ts";
 import { useEffect, useState } from "react";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
-import { Separator } from "@/components/ui/separator.tsx";
 import { CreateVerbDialogButton } from "@/components/CreateVerbDialogButton.tsx";
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { VerbTranslation } from "@/model/VerbTranslation.ts";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { HoverableListItem } from "@/components/HoverableListItem.tsx";
 
 function VerbsPanel() {
   const { selectedRoot } = useSelectedRoot();
@@ -55,27 +49,15 @@ function VerbsPanel() {
         const isSelected = verb?.id === dto.id;
 
         return (
-          <li key={dto.id} onClick={() => setVerb(dto)}>
-            <div
-              className={`text-sm cursor-pointer text-center truncate hover:bg-gray-100
-                      ${isSelected ? "font-bold bg-gray-100" : ""}`}
-            >
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <div className={"cursor-pointer"}>
-                      {dto.value} {firstTranslation && `(${firstTranslation})`}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{allTranslations}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-
-            {index < dtos.length - 1 && <Separator className="my-2" />}
-          </li>
+          <HoverableListItem
+            clickCallback={() => setVerb(dto)}
+            editCallback={() => {}}
+            deleteCallback={() => {}}
+            displayName={`${dto.value}${firstTranslation ? ` (${firstTranslation})` : ""}`}
+            toolTipDisplay={allTranslations}
+            isSelected={isSelected}
+            showSeparator={index < dtos.length - 1}
+          />
         );
       })}
     </ul>

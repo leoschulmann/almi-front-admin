@@ -11,8 +11,8 @@ function App() {
     <DictionaryContextProvider>
       <SelectedRootProvider>
         <div className="flex flex-row items-start justify-items-start min-h-svh">
-          <AllRootsPanel />
           <SelectedLangProvider>
+            <AllRootsPanel />
             <SelectedVerbProvider>
               <VerbsPanel />
               <VerbFormsPanel />
