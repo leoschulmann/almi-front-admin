@@ -20,9 +20,7 @@ function VerbsPanel() {
   const fetchVerbs = async (rootId: number): Promise<void> => {
     setLoading(true);
     try {
-      const verbs = await getDataVector("verb", VerbShortDto, {
-        searchParams: { rootId },
-      });
+      const verbs = await getDataVector(`verb/root/${rootId}`, VerbShortDto);
       setDtos(verbs);
     } catch (error) {
       console.error("Error loading data:", error);

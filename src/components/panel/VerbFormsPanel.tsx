@@ -40,12 +40,13 @@ export function VerbFormsPanel() {
 
   useEffect(() => {
     if (verb) {
-      void (async function (verbId: number) {
+      void (async (verbId: number) => {
         setLoading(true);
         try {
-          const forms: VerbForm[] = await getDataVector("verb/form", VerbForm, {
-            searchParams: { verb_id: verbId },
-          });
+          const forms: VerbForm[] = await getDataVector(
+            `vform/${verbId}`,
+            VerbForm,
+          );
           setVerbForms(forms);
         } catch (error) {
           console.error("Error loading data:", error);

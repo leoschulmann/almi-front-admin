@@ -17,14 +17,14 @@ import {
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { renderIcon } from "@/util/Common.tsx";
 import { InputWithWarning } from "@/components/InputWithWarning.tsx";
-import {
-  EditVerbForm,
-  UpdateVerbFormTransliteration,
-} from "@/model/EditVerbForm.ts";
 import { Transliteration } from "@/model/Transliteration.ts";
 import { Lang } from "@/model/Lang.ts";
 import { EditVerbDto } from "@/model/EditVerbDto.ts";
 import { VerbShortDto } from "@/model/VerbShortDto.ts";
+import {
+  UpdateVerbForm,
+  UpsertVFormTranslitDto,
+} from "@/model/UpdateVerbForm.ts";
 
 function getTransliteration(
   verbForm: VerbForm,
@@ -41,6 +41,7 @@ function setTransliteration(
   let translits = verbForm.transliterations;
 
   if (getTransliteration(verbForm, lang)) {
+    // update existing by lang code
     translits = translits.map((t) =>
       t.lang === lang.code ? { ...t, value: value } : t,
     );
@@ -52,6 +53,61 @@ function setTransliteration(
   }
 
   return { ...verbForm, transliterations: translits };
+}
+
+async function createNewVerbForm(
+  verbId: number,
+  tense: Tense,
+  template: TupleForTenses,
+  formValue: string,
+  translits: Transliteration[] = [],
+): Promise<VerbForm> {
+  const tensePerson = toTensePerson(tense, template.person);
+  const pluralityGender = toPluralityGender(
+    template.plurality,
+    template.gender,
+  );
+
+  const createVerbForm = new CreateVerbForm(
+    verbId,
+    formValue,
+    tensePerson,
+    pluralityGender,
+    translits.map((t) => ({
+      first: t.lang,
+      second: t.value,
+    })),
+  );
+  return await postData("vform", createVerbForm, VerbForm);
+}
+
+async function updateExistingVerbForm(
+  vformId: number,
+  formValue: string,
+  translits: Transliteration[] = [],
+): Promise<VerbForm> {
+  const updateDto = new UpdateVerbForm(
+    vformId,
+    formValue,
+    translits.map(
+      (t) =>
+        new UpsertVFormTranslitDto(
+          t.id < 0 ? undefined : t.id, // if id is negative, it means it's new
+          t.value,
+          t.lang,
+        ),
+    ),
+  );
+
+  return await putData("vform", updateDto, VerbForm);
+}
+
+async function updateVerbValue(
+  verbId: number,
+  value: string,
+): Promise<VerbShortDto> {
+  const editVerbDto = new EditVerbDto(verbId, value);
+  return await putData("verb", editVerbDto, VerbShortDto);
 }
 
 export function VerbFormListItem({
@@ -66,120 +122,61 @@ export function VerbFormListItem({
   const { lang } = useSelectedLang();
   const { setVerb, verb } = useSelectedVerb();
 
-  const [exists, setExists] = useState(vform !== undefined);
-
-  const [init, setInit] = useState(vform ?? new VerbForm());
-  const [verbForm, setVerbForm] = useState(vform ?? new VerbForm());
-
+  const [vformExists, setVformExists] = useState(vform !== undefined);
+  const [mutableVform, setMutableVform] = useState(vform ?? new VerbForm());
+  const [reference, setReference] = useState(vform ?? new VerbForm());
   const [showSaveBtn, setShowSaveBtn] = useState(false);
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    const verbValueChanged: boolean = verbForm.value !== init.value;
+    const verbValueChanged: boolean = mutableVform.value !== reference.value;
     const translitValueChanged: boolean =
-      getTransliteration(verbForm, lang)?.value !==
-      getTransliteration(init, lang)?.value;
+      getTransliteration(mutableVform, lang)?.value !==
+      getTransliteration(reference, lang)?.value;
 
     setShowSaveBtn(verbValueChanged || translitValueChanged);
-  }, [verbForm, lang, verb, init]);
-
-  const createNewVerbForm = async () => {
-    const id = verb?.id;
-    const tensePerson = toTensePerson(tense, template.person);
-    const pluralityGender = toPluralityGender(
-      template.plurality,
-      template.gender,
-    );
-
-    const transliteration = getTransliteration(verbForm, lang);
-
-    return await postData(
-      "verb/form",
-      new CreateVerbForm(
-        id,
-        verbForm.value,
-        tensePerson,
-        pluralityGender,
-
-        transliteration
-          ? [
-              {
-                first: transliteration.lang,
-                second: transliteration.value,
-              },
-            ]
-          : [],
-      ),
-      VerbForm,
-    );
-  };
-
-  const updateVerbForm = async () => {
-    const currentTranslit = getTransliteration(verbForm, lang);
-
-    const isExisting =
-      currentTranslit &&
-      currentTranslit.id >= 0 &&
-      currentTranslit.version >= 0;
-
-    const updTranslits = isExisting
-      ? [
-          new UpdateVerbFormTransliteration(
-            currentTranslit.id,
-            currentTranslit.version,
-            currentTranslit.value,
-          ),
-        ]
-      : [];
-
-    const newTranslits =
-      !isExisting && currentTranslit
-        ? [
-            {
-              first: currentTranslit.lang,
-              second: currentTranslit.value,
-            },
-          ]
-        : [];
-
-    const payload = new EditVerbForm(
-      verbForm.id,
-      verbForm.version,
-      verbForm.value,
-      newTranslits,
-      updTranslits,
-    );
-
-    return await putData("verb/form", payload, VerbForm);
-  };
+  }, [mutableVform, lang, verb, reference]);
 
   const handleClickSave = async () => {
     setSending(true);
 
     try {
-      const [upsertVerbFormResponse, updateVerbResponse] = await Promise.all([
-        exists ? updateVerbForm() : createNewVerbForm(),
-        
+      const upsertVerbFormPromise: Promise<VerbForm> = vformExists
+        ? updateExistingVerbForm(
+            mutableVform.id,
+            mutableVform.value,
+            mutableVform.transliterations,
+          )
+        : createNewVerbForm(
+            verb!.id,
+            tense,
+            template,
+            mutableVform.value,
+            mutableVform.transliterations,
+          );
+
+      const verbUpdatePromise =
         tense === "INFINITIVE" // form 'infinitive' eq verb value
-          ? putData(
-              "verb",
-              new EditVerbDto(verb.id, verb.version, verbForm.value),
-              VerbShortDto,
-            )
-          : Promise.resolve(null),
+          ? await updateVerbValue(verb!.id, mutableVform.value)
+          : null;
+
+      const [upsertVerbFormResponse, updateVerbResponse] = await Promise.all([
+        upsertVerbFormPromise,
+        verbUpdatePromise,
       ]);
 
       if (updateVerbResponse) {
-        setVerb({
-          ...verb,
+        const verb1: VerbShortDto = {
+          ...verb!,
           version: updateVerbResponse.version,
           value: updateVerbResponse.value,
-        });
+        };
+        setVerb(verb1);
       }
 
-      setVerbForm(upsertVerbFormResponse);
-      setInit(upsertVerbFormResponse);
-      setExists(true);
+      setMutableVform(upsertVerbFormResponse);
+      setReference(upsertVerbFormResponse);
+      setVformExists(true);
     } finally {
       setShowSaveBtn(false);
       setSending(false);
@@ -199,10 +196,12 @@ export function VerbFormListItem({
             template.person,
             template.plurality,
           )}
-          value={verbForm ? verbForm.value : ""}
-          onChange={(e) => setVerbForm({ ...verbForm, value: e.target.value })}
+          value={mutableVform ? mutableVform.value : ""}
+          onChange={(e) =>
+            setMutableVform({ ...mutableVform, value: e.target.value })
+          }
           warningMessage="Missing verb value"
-          showWarning={verbForm.value === ""}
+          showWarning={mutableVform.value === ""}
           textClassName="font-rubik font-semibold italic !text-2xl text-neutral-800"
           placeholderClassName="placeholder:text-sm placeholder:not-italic placeholder:font-normal"
         />
@@ -213,19 +212,23 @@ export function VerbFormListItem({
           type={"text"}
           className={"w-64"}
           placeholder={`Transliteration for ${lang.name}`}
-          disabled={verbForm.value === ""}
-          value={getTransliteration(verbForm, lang)?.value ?? ""}
+          disabled={mutableVform.value === ""}
+          value={getTransliteration(mutableVform, lang)?.value ?? ""}
           onChange={(e) =>
-            setVerbForm(setTransliteration(verbForm, lang, e.target.value))
+            setMutableVform(
+              setTransliteration(mutableVform, lang, e.target.value),
+            )
           }
-          showWarning={getTransliteration(verbForm, lang)?.value.trim() === ""}
+          showWarning={
+            getTransliteration(mutableVform, lang)?.value.trim() === ""
+          }
           warningMessage="Missing transliteration"
         />
 
         {showSaveBtn ? (
           <Button
             variant="outline"
-            disabled={verbForm.value === ""}
+            disabled={mutableVform.value === ""}
             onClick={handleClickSave}
             className="bg-blue-50"
           >
