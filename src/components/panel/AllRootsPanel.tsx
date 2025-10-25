@@ -5,10 +5,10 @@ import { useEffect, useState } from "react";
 import { RootPage } from "@/model/RootPage.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
-import { CreateRootDialog } from "@/components/CreateRootDialog.tsx";
 import { renderSkeleton } from "@/util/Common.tsx";
 import { HoverableListItem } from "@/components/HoverableListItem.tsx";
 import { CreateRootDialog } from "@/components/CreateRootDialog.tsx";
+import { EditRootDialog } from "@/components/EditRootDialog.tsx";
 
 export function AllRootsPanel() {
   const [roots, setRoots] = useState<Root[]>([]);
@@ -17,6 +17,8 @@ export function AllRootsPanel() {
   const [error, setError] = useState<string | null>(null);
   const [shouldReload, setShouldReload] = useState(0);
   const { selectedRoot, setSelectedRoot } = useSelectedRoot();
+  const [editedRoot, setEditedRoot] = useState<Root | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -85,7 +87,10 @@ export function AllRootsPanel() {
             {visibleRoots.map((root, idx) => (
               <HoverableListItem
                 clickCallback={() => setSelectedRoot(root)}
-                editCallback={() => {}}
+                editCallback={() => {
+                  setEditedRoot(root);
+                  setIsEditDialogOpen(true)
+                }}
                 deleteCallback={() => {}}
                 displayName={root.name}
                 toolTipDisplay={root.name}
@@ -96,6 +101,14 @@ export function AllRootsPanel() {
           </ul>
         )}
       </ScrollArea>
+      <EditRootDialog
+        open={isEditDialogOpen}
+        root={editedRoot!}
+        onOpenChange={setIsEditDialogOpen}
+        postSubmitCallback={() => {
+          setShouldReload(prev => prev + 1);
+        }}
+      ></EditRootDialog>
     </div>
   );
 }
