@@ -8,6 +8,7 @@ import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
 import { CreateRootDialog } from "@/components/CreateRootDialog.tsx";
 import { renderSkeleton } from "@/util/Common.tsx";
 import { HoverableListItem } from "@/components/HoverableListItem.tsx";
+import { CreateRootDialog } from "@/components/CreateRootDialog.tsx";
 
 export function AllRootsPanel() {
   const [roots, setRoots] = useState<Root[]>([]);
@@ -15,6 +16,7 @@ export function AllRootsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [shouldReload, setShouldReload] = useState(0);
+  const { selectedRoot, setSelectedRoot } = useSelectedRoot();
 
   useEffect(() => {
     let isMounted = true;
@@ -46,8 +48,8 @@ export function AllRootsPanel() {
       isMounted = false;
     };
   }, [shouldReload]);
-
-  const { selectedRoot, setSelectedRoot } = useSelectedRoot();
+  // const { isOpen, openRootDialog, params, setIsOpen, setParams } =
+  //   useRootDialog();
 
   return (
     <div className="h-screen w-48 flex flex-col">

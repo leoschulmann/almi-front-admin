@@ -33,8 +33,9 @@ function VerbsPanel() {
   useEffect(() => {
     if (selectedRoot) {
       void fetchVerbs(selectedRoot.id);
+      setVerb(null)
     }
-  }, [selectedRoot, verb]);
+  }, [selectedRoot, setVerb]);
 
   const renderVerbList = () => (
     <ul>

@@ -3,7 +3,7 @@ import { createContext, ReactNode, useContext, useState } from "react";
 
 interface SelectedVerbValue {
   verb: VerbShortDto | null;
-  setVerb: (verb: VerbShortDto) => void;
+  setVerb: (verb: VerbShortDto | null) => void;
 }
 
 const SelectedVerbCtx = createContext<SelectedVerbValue | null>(null);

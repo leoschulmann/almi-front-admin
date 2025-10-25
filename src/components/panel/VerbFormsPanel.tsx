@@ -155,13 +155,15 @@ export function VerbFormsPanel() {
           renderSkeleton(1)
         )}
       </div>
-      <ScrollArea className="flex-grow p-3 overflow-y-auto">
-        {!verb
-          ? renderMessageCentered("Select a verb")
-          : isLoading
-            ? renderSkeleton(15)
-            : renderVerbForms()}
-      </ScrollArea>
+      {!verb ? (
+        renderMessageCentered("Select a verb")
+      ) : isLoading ? (
+        renderSkeleton(15)
+      ) : (
+        <ScrollArea className="flex-grow p-3 overflow-y-auto">
+          {renderVerbForms()}
+        </ScrollArea>
+      )}
     </div>
   );
 }
