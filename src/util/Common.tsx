@@ -9,7 +9,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
-import { TriangleAlert } from "lucide-react";
 import React from "react";
 
 export function renderMessageCentered(message: string) {
@@ -39,6 +38,8 @@ export function renderIcon(
   gender: GrammaticalGender,
   person: GrammaticalPerson,
   plurality: Plurality,
+  classNames?: string,
+  tooltip?: string,
 ) {
   return (
     <TooltipProvider>
@@ -46,12 +47,16 @@ export function renderIcon(
         <TooltipTrigger>
           <img
             src={getIcon(gender, person, plurality)}
-            className="w-6 h-6"
+            className={classNames}
             alt={`gender: ${gender}, person: ${person}, plurality: ${plurality}`}
           ></img>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{`gender: ${gender}, person: ${person}, plurality: ${plurality}`}</p>
+          <p>
+            {tooltip
+              ? tooltip
+              : `gender: ${gender}, person: ${person}, plurality: ${plurality}`}
+          </p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

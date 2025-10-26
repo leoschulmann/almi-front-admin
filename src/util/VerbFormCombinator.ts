@@ -1,6 +1,7 @@
 import { GrammaticalGender } from "@/model/GrammaticalGender.ts";
 import { GrammaticalPerson } from "@/model/GrammaticalPerson.ts";
 import { Plurality } from "@/model/Plurality.ts";
+import { Lang } from "@/model/Lang.ts";
 
 export class TupleForTenses {
   constructor(
@@ -126,3 +127,14 @@ export const generatePlaceholder = (
 
   return parts.join(" ");
 };
+
+export function generatePlaceholder2(lang: Lang) {
+  switch (lang.code) {
+    case "EN":
+      return "-- EMPTY --";
+    case "RU":
+      return "-- ПУСТО --";
+    default:
+      return "-- EMPTY --";
+  }
+}

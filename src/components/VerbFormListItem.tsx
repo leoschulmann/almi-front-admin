@@ -1,11 +1,10 @@
 import { VerbForm } from "@/model/VerbForm.ts";
 import { Tense } from "@/model/Tense.ts";
 import {
-  generatePlaceholder,
+  generatePlaceholder2,
   TupleForTenses,
 } from "@/util/VerbFormCombinator.ts";
-import { Save } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { postData, putData } from "@/util/ApiClient.ts";
@@ -190,12 +189,8 @@ export function VerbFormListItem({
       <div className={"pt-1 pb-1 flex items-center gap-3"}>
         <InputWithWarning
           type={"text"}
-          className={"w-64"}
-          placeholder={generatePlaceholder(
-            template.gender,
-            template.person,
-            template.plurality,
-          )}
+          className={"w-48"}
+          placeholder={generatePlaceholder2(lang)}
           value={mutableVform ? mutableVform.value : ""}
           onChange={(e) =>
             setMutableVform({ ...mutableVform, value: e.target.value })
@@ -206,12 +201,38 @@ export function VerbFormListItem({
           placeholderClassName="placeholder:text-sm placeholder:not-italic placeholder:font-normal"
         />
 
-        {renderIcon(template.gender, template.person, template.plurality)}
+        {showSaveBtn ? (
+          <Button
+            variant="outline"
+            disabled={mutableVform.value === ""}
+            onClick={handleClickSave}
+            className="bg-blue-100 border-2 p-1 border-blue-500"
+          >
+            {sending ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-black"></div>
+            ) : (
+              renderIcon(
+                template.gender,
+                template.person,
+                template.plurality,
+                "w-6 h-6",
+                `SAVE: ${tense} | ${template.gender} | ${template.person} | ${template.plurality}`,
+              )
+            )}
+          </Button>
+        ) : (
+          renderIcon(
+            template.gender,
+            template.person,
+            template.plurality,
+            "w-9 h-9 p-1.5",
+          )
+        )}
 
         <InputWithWarning
           type={"text"}
-          className={"w-64"}
-          placeholder={`Transliteration for ${lang.name}`}
+          className={"w-48"}
+          placeholder={generatePlaceholder2(lang)}
           disabled={mutableVform.value === ""}
           value={getTransliteration(mutableVform, lang)?.value ?? ""}
           onChange={(e) =>
@@ -224,23 +245,6 @@ export function VerbFormListItem({
           }
           warningMessage="Missing transliteration"
         />
-
-        {showSaveBtn ? (
-          <Button
-            variant="outline"
-            disabled={mutableVform.value === ""}
-            onClick={handleClickSave}
-            className="bg-blue-50"
-          >
-            {sending ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-black"></div>
-            ) : (
-              <Save className="text-blue-500" />
-            )}
-          </Button>
-        ) : (
-          <div />
-        )}
       </div>
     </li>
   );
