@@ -1,8 +1,7 @@
-import { Root } from "@/model/Root.ts";
+import { Root, RootPage } from "@/model/Root.ts";
 import { getDataScalar } from "@/util/ApiClient.ts";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { useEffect, useState } from "react";
-import { RootPage } from "@/model/RootPage.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
 import { renderSkeleton } from "@/util/Common.tsx";

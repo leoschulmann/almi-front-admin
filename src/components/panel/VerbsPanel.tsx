@@ -1,14 +1,14 @@
 import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
 import { getDataVector } from "@/util/ApiClient.ts";
-import { VerbShortDto } from "@/model/VerbShortDto.ts";
 import { useEffect, useState } from "react";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
-import { CreateVerbDialogButton } from "@/components/CreateVerbDialogButton.tsx";
+import CreateVerbDialogButton from "@/components/CreateVerbDialogButton.tsx";
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { VerbTranslation } from "@/model/VerbTranslation.ts";
 import { HoverableListItem } from "@/components/HoverableListItem.tsx";
+import { VerbShortDto } from "@/model/Verb.ts";
 
 function VerbsPanel() {
   const { selectedRoot } = useSelectedRoot();

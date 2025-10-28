@@ -2,18 +2,21 @@ import { Input } from "@/components/ui/input.tsx";
 import { FormItem, FormLabel } from "@/components/ui/form.tsx";
 import { useEffect, useState } from "react";
 import { useDictionaryContext } from "@/ctx/InitialDictionariesLoadCtx.tsx";
-import { VerbTranslation } from "@/model/VerbTranslation.ts";
+import {
+  CreateVerbTranslation,
+  VerbTranslation,
+} from "@/model/VerbTranslation.ts";
 
 export function TranslationsField({
   translations,
   onChange,
 }: {
-  translations: VerbTranslation[];
-  onChange: (translations: VerbTranslation[]) => void;
+  translations: CreateVerbTranslation[];
+  onChange: (translations: CreateVerbTranslation[]) => void;
 }) {
   const { langs } = useDictionaryContext();
   const [translationsMap, setTranslationsMap] = useState<
-    Record<string, VerbTranslation[]>
+    Record<string, CreateVerbTranslation[]>
   >({});
 
   useEffect(() => {
@@ -24,7 +27,7 @@ export function TranslationsField({
         acc[trans.lang] = accElement;
         return acc;
       },
-      {} as Record<string, VerbTranslation[]>,
+      {} as Record<string, CreateVerbTranslation[]>,
     );
 
     setTranslationsMap(map);
@@ -34,7 +37,7 @@ export function TranslationsField({
     console.log(`mutating map ${translationsMap}`);
     const translations = translationsMap[lang] || [];
     if (!translations[idx]) {
-      translations[idx] = new VerbTranslation(-1, "", -1, lang);
+      translations[idx] = new CreateVerbTranslation("", "EN");
     }
 
     const translation = translations[idx];
@@ -53,7 +56,7 @@ export function TranslationsField({
       ...translationsMap,
       [lang]: [
         ...(translationsMap[lang] ?? []),
-        new VerbTranslation(-1, "", -1, lang),
+        new CreateVerbTranslation("", "EN"),
       ],
     };
 
@@ -76,7 +79,7 @@ export function TranslationsField({
           <FormLabel>{name}</FormLabel>
           <div className="flex flex-col gap-2">
             {(
-              translationsMap[code] || [new VerbTranslation(-1, "", -1, code)]
+              translationsMap[code] || [new CreateVerbTranslation("", "EN")]
             ).map((translation, i) => (
               <div key={code + "_" + i} className="flex gap-2">
                 <Input

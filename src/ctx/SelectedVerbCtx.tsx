@@ -1,5 +1,5 @@
-import { VerbShortDto } from "@/model/VerbShortDto.ts";
 import { createContext, ReactNode, useContext, useState } from "react";
+import { VerbShortDto } from "@/model/Verb.ts";
 
 interface SelectedVerbValue {
   verb: VerbShortDto | null;

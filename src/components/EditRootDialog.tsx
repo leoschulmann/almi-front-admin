@@ -5,10 +5,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Root } from "@/model/Root.ts";
+import { EditRootDto, Root } from "@/model/Root.ts";
 import { useEffect, useState } from "react";
 import { putData } from "@/util/ApiClient.ts";
-import { EditRootDto } from "@/model/EditRootDto.ts";
 import { InputRoot } from "@/components/InputRoot.tsx";
 
 export const EditRootDialog = ({

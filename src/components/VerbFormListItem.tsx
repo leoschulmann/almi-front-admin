@@ -1,5 +1,4 @@
-import { VerbForm } from "@/model/VerbForm.ts";
-import { Tense } from "@/model/Tense.ts";
+import { CreateVerbForm, UpdateVerbForm, VerbForm } from "@/model/VerbForm.ts";
 import {
   generatePlaceholder2,
   TupleForTenses,
@@ -8,27 +7,25 @@ import React, { useEffect, useState } from "react";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { postData, putData } from "@/util/ApiClient.ts";
-import {
-  CreateVerbForm,
-  toPluralityGender,
-  toTensePerson,
-} from "@/model/CreateVerbForm.ts";
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { renderIcon } from "@/util/Common.tsx";
 import { InputWithWarning } from "@/components/InputWithWarning.tsx";
-import { Transliteration } from "@/model/Transliteration.ts";
-import { Lang } from "@/model/Lang.ts";
-import { EditVerbDto } from "@/model/EditVerbDto.ts";
-import { VerbShortDto } from "@/model/VerbShortDto.ts";
 import {
-  UpdateVerbForm,
   UpsertVFormTranslitDto,
-} from "@/model/UpdateVerbForm.ts";
+  VFormTransliteration,
+} from "@/model/VFormTransliteration.ts";
+import { Lang } from "@/model/Lang.ts";
+import {
+  Tense,
+  toPluralityGender,
+  toTensePerson,
+} from "@/model/VerbParameters.ts";
+import { EditVerbDto, VerbShortDto } from "@/model/Verb.ts";
 
 function getTransliteration(
   verbForm: VerbForm,
   lang: Lang,
-): Transliteration | undefined {
+): VFormTransliteration | undefined {
   return verbForm.transliterations.find((t) => t.lang === lang.code);
 }
 
@@ -47,7 +44,7 @@ function setTransliteration(
   } else {
     translits = [
       ...translits,
-      new Transliteration(undefined, value, undefined, lang.code),
+      new VFormTransliteration(undefined, value, undefined, lang.code),
     ];
   }
 
@@ -59,7 +56,7 @@ async function createNewVerbForm(
   tense: Tense,
   template: TupleForTenses,
   formValue: string,
-  translits: Transliteration[] = [],
+  translits: VFormTransliteration[] = [],
 ): Promise<VerbForm> {
   const tensePerson = toTensePerson(tense, template.person);
   const pluralityGender = toPluralityGender(
@@ -83,7 +80,7 @@ async function createNewVerbForm(
 async function updateExistingVerbForm(
   vformId: number,
   formValue: string,
-  translits: Transliteration[] = [],
+  translits: VFormTransliteration[] = [],
 ): Promise<VerbForm> {
   const updateDto = new UpdateVerbForm(
     vformId,

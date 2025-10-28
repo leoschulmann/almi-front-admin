@@ -13,7 +13,6 @@ import { useDictionaryContext } from "@/ctx/InitialDictionariesLoadCtx.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { CreateVerbDto, createVerbSchema } from "@/model/CreateVerbDto.ts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -31,17 +30,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { Binyan } from "@/model/Binyan.ts";
 import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { postData } from "@/util/ApiClient.ts";
-import { Verb } from "@/model/Verb.ts";
+import { CreateVerbDto, createVerbSchema, Verb } from "@/model/Verb.ts";
 import { plainToInstance } from "class-transformer";
 import { TranslationsField } from "@/components/TranslationsField.tsx";
+import { Binyan } from "@/model/VerbParameters.ts";
 import { VerbTranslation } from "@/model/VerbTranslation.ts";
 
-export function CreateVerbDialogButton({
+
+function CreateVerbDialogButton({
   enabled,
   onSuccess,
 }: {
@@ -279,3 +279,5 @@ export function CreateVerbDialogButton({
     </Dialog>
   );
 }
+
+export default CreateVerbDialogButton

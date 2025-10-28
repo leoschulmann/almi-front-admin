@@ -3,7 +3,6 @@ import { ReactElement, useEffect, useState } from "react";
 import { getDataVector } from "@/util/ApiClient.ts";
 import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
 import { VerbForm } from "@/model/VerbForm.ts";
-import type { Tense } from "@/model/Tense.ts";
 import {
   FUTURE_VERB_FORM_TEMPLATES,
   IMPERATIVE_VERB_FORM_TEMPLATES,
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { VerbFormListItem } from "@/components/VerbFormListItem.tsx";
+import { Tense } from "@/model/VerbParameters.ts";
 
 export function VerbFormsPanel() {
   const { verb } = useSelectedVerb();
@@ -79,11 +79,11 @@ export function VerbFormsPanel() {
     return (
       <li key={`title-${title}`}>
         <div className="flex items-center gap-3">
-          <div className="h-0.5 w-1/24 bg-[#FF006E]" />
+          <div className="h-0.5 w-full bg-[#FF006E]" />
           <div className="text-2xl font-normal font-noto-sans text-[#FF006E] italic text-left">
             {title}
           </div>
-          <div className="h-0.5 w-1/24 bg-[#FF006E]" />
+          <div className="h-0.5 w-full bg-[#FF006E]" />
         </div>
       </li>
     );
@@ -129,7 +129,7 @@ export function VerbFormsPanel() {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col">
+    <div className="h-screen w-auto flex flex-col">
       <div className="p-3 flex items-center gap-3">
         {lang ? (
           <Select
@@ -160,7 +160,7 @@ export function VerbFormsPanel() {
       ) : isLoading ? (
         renderSkeleton(15)
       ) : (
-        <ScrollArea className="flex-grow p-3 overflow-y-auto">
+        <ScrollArea className="flex-grow p-3 overflow-y-auto border-r">
           {renderVerbForms()}
         </ScrollArea>
       )}

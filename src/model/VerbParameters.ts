@@ -1,47 +1,63 @@
-import { GrammaticalPerson } from "@/model/GrammaticalPerson.ts";
-import { GrammaticalGender } from "@/model/GrammaticalGender.ts";
-import { Tense } from "@/model/Tense.ts";
-import { Plurality } from "@/model/Plurality.ts";
 import { Expose } from "class-transformer";
 
-export class CreateVerbForm {
-  @Expose({ name: "v_id" })
-  verbId: number;
+export type GrammaticalGender = "NONE" | "MASCULINE" | "FEMININE";
 
-  @Expose({ name: "v" })
-  value: string;
+export type GrammaticalPerson = "NONE" | "FIRST" | "SECOND" | "THIRD";
 
-  @Expose({ name: "t" })
-  tenseAndPerson: TensePerson;
+export type Plurality = "SINGULAR" | "PLURAL" | "NONE";
 
-  @Expose({ name: "p" })
-  pluralityGender: PluralityGender;
+export type Tense = "PRESENT" | "PAST" | "FUTURE" | "IMPERATIVE" | "INFINITIVE";
 
-  @Expose({ name: "ts" }) //todo make this a list of objects
-  transliterations: Array<{
-    first: string;
-    second: string;
-  }>;
+export class Binyan {
+  readonly id: number;
 
-  constructor(
-    verbId?: number,
-    value?: string,
-    tenseAndPerson?: TensePerson,
-    pluralityGender?: PluralityGender,
-    transliterations?: Array<{
-      first: string;
-      second: string;
-    }>,
-  ) {
-    this.verbId = verbId ?? 0;
+  @Expose({ name: "b" })
+  readonly value: string;
+
+  @Expose({ name: "ver" })
+  readonly version: number;
+
+  constructor(id?: number, value?: string, version?: number) {
+    this.id = id ?? 0;
     this.value = value ?? "";
-    this.tenseAndPerson = tenseAndPerson ?? "INFINITIVE";
-    this.pluralityGender = pluralityGender ?? "NONE";
-    this.transliterations = transliterations ?? [];
+    this.version = version ?? 0;
   }
 }
 
-type TensePerson =
+export class Gizrah {
+  readonly id: number;
+
+  @Expose({ name: "g" })
+  readonly value: string;
+
+  @Expose({ name: "ver" })
+  readonly version: number;
+
+  constructor(id?: number, name?: string, version?: number) {
+    this.id = id ?? 0;
+    this.value = name ?? "";
+    this.version = version ?? 0;
+  }
+}
+
+export class Preposition {
+  readonly id: number;
+
+  @Expose({ name: "p" })
+  readonly value: string;
+
+  @Expose({ name: "ver" })
+  readonly version: number;
+
+  constructor(id?: number, value?: string, version?: number) {
+    this.id = id ?? 0;
+    this.value = value ?? "";
+    this.version = version ?? 0;
+  }
+}
+
+
+export type TensePerson =
   | "INFINITIVE"
   | "PRESENT"
   | "PAST_FIRST_PERSON"
@@ -88,7 +104,7 @@ export function toTensePerson(
   }
 }
 
-type PluralityGender =
+export type PluralityGender =
   | "NONE"
   | "SINGULAR_MASCULINE"
   | "SINGULAR_FEMININE"

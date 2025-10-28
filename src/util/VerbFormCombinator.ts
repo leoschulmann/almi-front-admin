@@ -1,7 +1,9 @@
-import { GrammaticalGender } from "@/model/GrammaticalGender.ts";
-import { GrammaticalPerson } from "@/model/GrammaticalPerson.ts";
-import { Plurality } from "@/model/Plurality.ts";
 import { Lang } from "@/model/Lang.ts";
+import {
+  GrammaticalGender,
+  GrammaticalPerson,
+  Plurality,
+} from "@/model/VerbParameters.ts";
 
 export class TupleForTenses {
   constructor(

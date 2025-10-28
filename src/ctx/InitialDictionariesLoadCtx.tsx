@@ -5,11 +5,9 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { Binyan } from "@/model/Binyan.ts";
-import { Preposition } from "@/model/Preposition.ts";
-import { Gizrah } from "@/model/Gizrah.ts";
 import { getAsMap, getDataVector } from "@/util/ApiClient.ts";
 import { Lang } from "@/model/Lang.ts";
+import { Binyan, Gizrah, Preposition } from "@/model/VerbParameters.ts";
 
 interface Dictionary {
   binyans: Binyan[];

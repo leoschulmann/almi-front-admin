@@ -1,7 +1,4 @@
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { GrammaticalGender } from "@/model/GrammaticalGender.ts";
-import { GrammaticalPerson } from "@/model/GrammaticalPerson.ts";
-import { Plurality } from "@/model/Plurality.ts";
 import { getIcon } from "@/util/VerbFormCombinator.ts";
 import {
   Tooltip,
@@ -10,6 +7,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
 import React from "react";
+import {
+  GrammaticalGender,
+  GrammaticalPerson,
+  Plurality,
+} from "@/model/VerbParameters.ts";
 
 export function renderMessageCentered(message: string) {
   return (
