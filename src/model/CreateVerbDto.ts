@@ -1,6 +1,6 @@
-import { Expose, Transform, Type } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 import { z } from "zod";
-import { VerbTranslation } from "@/model/VerbTranslation.ts";
+import { CreateVerbTranslation } from "@/model/VerbTranslation.ts";
 
 export class CreateVerbDto {
   @Expose({ name: "v" })
@@ -19,8 +19,8 @@ export class CreateVerbDto {
   prepositionId: number[];
 
   @Expose({ name: "t" })
-  @Type(() => VerbTranslation)
-  translations: VerbTranslation[];
+  @Type(() => CreateVerbTranslation)
+  translations: CreateVerbTranslation[];
 
   constructor(
     value?: string,
@@ -28,7 +28,7 @@ export class CreateVerbDto {
     binyanId?: number,
     gizrahId?: number[],
     prepositionId?: number[],
-    translations?: VerbTranslation[],
+    translations?: CreateVerbTranslation[],
   ) {
     this.value = value ?? "";
     this.rootId = rootId ?? 0;
@@ -56,10 +56,8 @@ export const createVerbSchema = z.object({
   prepositionId: z.array(z.number()),
   translations: z.array(
     z.object({
-      id: z.number(),
       value: z.string(),
       lang: z.string(),
-      version: z.number(),
     }),
   ),
 });

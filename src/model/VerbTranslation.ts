@@ -20,3 +20,16 @@ export class VerbTranslation {
     this.lang = lang ?? "EN";
   }
 }
+
+export class CreateVerbTranslation {
+  @Expose({ name: "t" })
+  value: string;
+
+  @Expose({ name: "l" })
+  lang: string;
+
+  constructor(value?: string, lang?: string) {
+    this.value = value ?? "";
+    this.lang = lang ?? "EN";
+  }
+}
