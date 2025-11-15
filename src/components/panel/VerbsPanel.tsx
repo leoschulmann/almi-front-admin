@@ -76,7 +76,7 @@ function VerbsPanel() {
 
   return (
     <div className="h-screen w-48 flex flex-col ">
-      <div className="flex-shrink-0 flex items-center justify-between p-3">
+      <div className="flex-shrink-0 flex flex-col items-center justify-between p-3">
         <CreateVerbDialogButton
           enabled={!!selectedRoot}
           onSuccess={onSuccess}

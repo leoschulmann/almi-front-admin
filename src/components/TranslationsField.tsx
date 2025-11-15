@@ -2,17 +2,21 @@ import { Input } from "@/components/ui/input.tsx";
 import { FormItem, FormLabel } from "@/components/ui/form.tsx";
 import { useEffect, useState } from "react";
 import { useDictionaryContext } from "@/ctx/InitialDictionariesLoadCtx.tsx";
-import {
-  CreateVerbTranslation,
-  VerbTranslation,
-} from "@/model/VerbTranslation.ts";
+import { CreateVerbTranslation } from "@/model/VerbTranslation.ts";
+import { Textarea } from "@/components/ui/textarea.tsx";
 
 export function TranslationsField({
   translations,
   onChange,
+  enableMultipleTranslations = true,
+  asColumns = false,
+  asTextAreas = false,
 }: {
   translations: CreateVerbTranslation[];
   onChange: (translations: CreateVerbTranslation[]) => void;
+  enableMultipleTranslations?: boolean;
+  asColumns?: boolean;
+  asTextAreas?: boolean;
 }) {
   const { langs } = useDictionaryContext();
   const [translationsMap, setTranslationsMap] = useState<
@@ -66,6 +70,7 @@ export function TranslationsField({
 
   function canRenderPlusBtn(code: string) {
     return (
+      enableMultipleTranslations &&
       translationsMap[code]?.length > 0 &&
       translationsMap[code][translationsMap[code].length - 1]?.value?.trim() !==
         ""
@@ -73,7 +78,7 @@ export function TranslationsField({
   }
 
   return (
-    <div className="flex align-middle gap-3">
+    <div className={`flex align-middle gap-3 ${asColumns ? "flex-col" : ""}`}>
       {langs.map(({ code, name }) => (
         <FormItem key={code}>
           <FormLabel>{name}</FormLabel>
@@ -82,13 +87,23 @@ export function TranslationsField({
               translationsMap[code] || [new CreateVerbTranslation("", "EN")]
             ).map((translation, i) => (
               <div key={code + "_" + i} className="flex gap-2">
-                <Input
-                  placeholder={code + " translation"}
-                  value={translation.value}
-                  onChange={(e) => {
-                    writeTranslation(code, i, e.target.value);
-                  }}
-                />
+                {asTextAreas ? (
+                  <Textarea
+                    placeholder={code + " translation"}
+                    value={translation.value}
+                    onChange={(e) => {
+                      writeTranslation(code, i, e.target.value);
+                    }}
+                  />
+                ) : (
+                  <Input
+                    placeholder={code + " translation"}
+                    value={translation.value}
+                    onChange={(e) => {
+                      writeTranslation(code, i, e.target.value);
+                    }}
+                  />
+                )}
               </div>
             ))}
             {canRenderPlusBtn(code) && (

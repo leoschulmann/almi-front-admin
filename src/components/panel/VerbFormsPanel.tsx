@@ -23,11 +23,25 @@ import {
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { VerbFormListItem } from "@/components/VerbFormListItem.tsx";
 import { Tense } from "@/model/VerbParameters.ts";
+import { VerbShortDto } from "@/model/Verb";
+
+export function renderTitle(title: string) {
+  return (
+    <li key={`title-${title}`}>
+      <div className="flex items-center gap-3">
+        <div className="h-0.5 w-full bg-[#FF006E]" />
+        <div className="text-2xl font-normal font-noto-sans text-[#FF006E] italic text-left">
+          {title}
+        </div>
+        <div className="h-0.5 w-full bg-[#FF006E]" />
+      </div>
+    </li>
+  );
+}
 
 export function VerbFormsPanel() {
-  const { verb } = useSelectedVerb();
+  const { setVerbForms, verb, verbForms } = useSelectedVerb();
   const [isLoading, setLoading] = useState(false);
-  const [verbForms, setVerbForms] = useState<VerbForm[]>([]);
   const { langs } = useDictionaryContext();
   const { lang, setLang } = useSelectedLang();
 
@@ -40,23 +54,25 @@ export function VerbFormsPanel() {
 
   useEffect(() => {
     if (verb) {
-      void (async (verbId: number) => {
-        setLoading(true);
-        try {
-          const forms: VerbForm[] = await getDataVector(
-            `vform/${verbId}`,
-            VerbForm,
-          );
-          setVerbForms(forms);
-        } catch (error) {
-          console.error("Error loading data:", error);
-          setVerbForms([]);
-        } finally {
-          setLoading(false);
-        }
-      })(verb.id);
+      void loadVerbForms(verb.id);
     }
   }, [verb]);
+
+  async function loadVerbForms(verbId: number) {
+    setLoading(true);
+    try {
+      const forms: VerbForm[] = await getDataVector(
+        `vform/${verbId}`,
+        VerbForm,
+      );
+      setVerbForms(forms);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      setVerbForms([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function mapToComponent(tense: Tense, verbForms: VerbForm[]) {
     return (template: TupleForTenses) => {
@@ -70,7 +86,17 @@ export function VerbFormsPanel() {
         );
 
       return (
-        <VerbFormListItem vform={vform} tense={tense} template={template} />
+        <VerbFormListItem
+          vform={vform}
+          tense={tense}
+          template={template}
+          onSuccessUpsertVerbForm={(respVerbForm: VerbForm) => {
+            setVerbForms((prev8) => [...prev8, respVerbForm]);
+          }}
+          onSuccessUpdateVerb={(respVerb: VerbShortDto): void => {
+            // todo - update verb in the list
+          }}
+        />
       );
     };
   }
@@ -129,7 +155,7 @@ export function VerbFormsPanel() {
   }
 
   return (
-    <div className="h-screen w-auto flex flex-col">
+    <div className="h-screen w-[500px] flex flex-col">
       <div className="p-3 flex items-center gap-3">
         {lang ? (
           <Select

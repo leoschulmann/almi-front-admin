@@ -5,6 +5,7 @@ import { DictionaryContextProvider } from "@/ctx/InitialDictionariesLoadCtx.tsx"
 import { SelectedVerbProvider } from "@/ctx/SelectedVerbCtx.tsx";
 import { VerbFormsPanel } from "@/components/panel/VerbFormsPanel.tsx";
 import { SelectedLangProvider } from "@/ctx/SelectedLangCtx.tsx";
+import { VerbExamplesPanel } from "@/components/panel/VerbExamplePanel.tsx";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             <SelectedVerbProvider>
               <VerbsPanel />
               <VerbFormsPanel />
+              <VerbExamplesPanel />
             </SelectedVerbProvider>
           </SelectedLangProvider>
         </div>

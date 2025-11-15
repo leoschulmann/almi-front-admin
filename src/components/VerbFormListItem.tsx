@@ -110,10 +110,14 @@ export function VerbFormListItem({
   vform,
   tense,
   template,
+  onSuccessUpsertVerbForm,
+  onSuccessUpdateVerb,
 }: {
   vform: VerbForm | undefined;
   tense: Tense;
   template: TupleForTenses;
+  onSuccessUpsertVerbForm: (respVForm: VerbForm) => void;
+  onSuccessUpdateVerb: (respVerb: VerbShortDto) => void;
 }) {
   const { lang } = useSelectedLang();
   const { setVerb, verb } = useSelectedVerb();
@@ -151,6 +155,7 @@ export function VerbFormListItem({
             mutableVform.transliterations,
           );
 
+      // if form is 'infinitive', we need to update verb value too
       const verbUpdatePromise =
         tense === "INFINITIVE" // form 'infinitive' eq verb value
           ? await updateVerbValue(verb!.id, mutableVform.value)
@@ -168,11 +173,14 @@ export function VerbFormListItem({
           value: updateVerbResponse.value,
         };
         setVerb(verb1);
+        
+        onSuccessUpdateVerb(updateVerbResponse); 
       }
 
       setMutableVform(upsertVerbFormResponse);
       setReference(upsertVerbFormResponse);
       setVformExists(true);
+      onSuccessUpsertVerbForm(upsertVerbFormResponse)
     } finally {
       setShowSaveBtn(false);
       setSending(false);
