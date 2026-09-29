@@ -63,7 +63,7 @@ export function HoverableListItem({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  className="absolute right-12 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 active:opacity-50"
+                  className="absolute right-12 top-1/2 transform -translate-y-1/2 p-1 rounded bg-gray-100 opacity-0 group-hover:opacity-100 active:opacity-50"
                   onClick={(e) => {
                     e.stopPropagation();
                     thirdAction.callback();
@@ -85,7 +85,7 @@ export function HoverableListItem({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="absolute right-7 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 active:opacity-50"
+                className="absolute right-7 top-1/2 transform -translate-y-1/2 p-1 rounded bg-gray-100 opacity-0 group-hover:opacity-100 active:opacity-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   editCallback();
@@ -104,7 +104,7 @@ export function HoverableListItem({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 active:opacity-50"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded bg-gray-100 opacity-0 group-hover:opacity-100 active:opacity-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsOpen(true);
