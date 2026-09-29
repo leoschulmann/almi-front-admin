@@ -147,3 +147,40 @@ export class CreateVerbForm {
     this.transliterations = transliterations ?? [];
   }
 }
+
+// Mirrors backend `BulkCreateVerbFormItemDto`/`BulkCreateVerbFormDto`
+// (almi-backend-ktor VForm.kt) wire names exactly.
+export class BulkCreateVerbFormItemDto {
+  @Expose({ name: "v" })
+  value: string;
+
+  @Expose({ name: "t" })
+  tenseAndPerson: TensePerson;
+
+  @Expose({ name: "p" })
+  pluralityGender: PluralityGender;
+
+  constructor(
+    value?: string,
+    tenseAndPerson?: TensePerson,
+    pluralityGender?: PluralityGender,
+  ) {
+    this.value = value ?? "";
+    this.tenseAndPerson = tenseAndPerson ?? "INFINITIVE";
+    this.pluralityGender = pluralityGender ?? "NONE";
+  }
+}
+
+export class BulkCreateVerbFormDto {
+  @Expose({ name: "v_id" })
+  verbId: number;
+
+  @Expose({ name: "forms" })
+  @Type(() => BulkCreateVerbFormItemDto)
+  forms: BulkCreateVerbFormItemDto[];
+
+  constructor(verbId?: number, forms?: BulkCreateVerbFormItemDto[]) {
+    this.verbId = verbId ?? 0;
+    this.forms = forms ?? [];
+  }
+}

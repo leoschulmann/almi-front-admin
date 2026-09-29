@@ -14,15 +14,19 @@ export class Verb {
   readonly version: number;
 
   @Expose({ name: "b" })
+  @Type(() => Binyan)
   readonly binyan: Binyan;
 
   @Expose({ name: "r" })
+  @Type(() => Root)
   readonly root: Root;
 
   @Expose({ name: "g" })
+  @Type(() => Gizrah)
   readonly gizrahs: Gizrah[];
 
   @Expose({ name: "p" })
+  @Type(() => Preposition)
   readonly prepositions: Preposition[];
 
   @Expose({ name: "t" })

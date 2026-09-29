@@ -1,5 +1,5 @@
 import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
-import { getDataVector } from "@/util/ApiClient.ts";
+import { deleteData, getDataVector } from "@/util/ApiClient.ts";
 import { useEffect, useState } from "react";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import CreateVerbDialogButton from "@/components/CreateVerbDialogButton.tsx";
@@ -9,6 +9,8 @@ import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { VerbTranslation } from "@/model/VerbTranslation.ts";
 import { HoverableListItem } from "@/components/HoverableListItem.tsx";
 import { VerbShortDto } from "@/model/Verb.ts";
+import { Stamp } from "lucide-react";
+import { StampVerbDialog } from "@/components/StampVerbDialog.tsx";
 
 function VerbsPanel() {
   const { selectedRoot } = useSelectedRoot();
@@ -16,6 +18,8 @@ function VerbsPanel() {
   const [isLoading, setLoading] = useState(false);
   const { setVerb, verb } = useSelectedVerb();
   const { lang } = useSelectedLang();
+  const [stampVerbId, setStampVerbId] = useState<number | null>(null);
+  const [isStampDialogOpen, setStampDialogOpen] = useState(false);
 
   const fetchVerbs = async (rootId: number): Promise<void> => {
     setLoading(true);
@@ -37,6 +41,20 @@ function VerbsPanel() {
     }
   }, [selectedRoot, setVerb]);
 
+  async function handleDeleteVerb(id: number) {
+    try {
+      // DELETE /api/verb/{id}
+      await deleteData(`verb/${id}`);
+      setDtos((prev) => prev.filter((d) => d.id !== id));
+      if (verb?.id === id) {
+        setVerb(null);
+      }
+    } catch (error) {
+      console.error("Failed to delete verb:", error);
+      alert("Failed to delete the verb. Please try again.");
+    }
+  }
+
   const renderVerbList = () => (
     <ul>
       {dtos.map((dto: VerbShortDto, index) => {
@@ -49,9 +67,19 @@ function VerbsPanel() {
 
         return (
           <HoverableListItem
+            key={dto.id}
             clickCallback={() => setVerb(dto)}
             editCallback={() => {}}
-            deleteCallback={() => {}}
+            deleteCallback={() => handleDeleteVerb(dto.id)}
+            thirdAction={{
+              icon: Stamp,
+              callback: () => {
+                setStampVerbId(dto.id);
+                setStampDialogOpen(true);
+              },
+              toolTipDisplay:
+                lang.code == "RU" ? "Проштамповать" : "Stamp verb",
+            }}
             displayName={`${dto.value}${firstTranslation ? ` (${firstTranslation})` : ""}`}
             toolTipDisplay={allTranslations}
             isSelected={isSelected}
@@ -93,6 +121,12 @@ function VerbsPanel() {
                   `Nothing found for '${selectedRoot?.name}' 😕`,
                 )}
       </ScrollArea>
+      <StampVerbDialog
+        open={isStampDialogOpen}
+        onOpenChange={setStampDialogOpen}
+        modelVerbId={stampVerbId}
+        onSuccess={onSuccess}
+      />
     </div>
   );
 }

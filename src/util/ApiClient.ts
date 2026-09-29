@@ -56,6 +56,29 @@ export async function postData<T extends object | string, R>(
   return plainToInstance(model, response);
 }
 
+export async function postDataVector<T extends object | string, R extends object>(
+  url: string,
+  body: T,
+  model: {
+    new (...args: ConstructorParameters<typeof Object>): R;
+  },
+  options?: Options,
+): Promise<R[]> {
+  const response = await apiClient
+    .post(url, {
+      ...options,
+      ...(typeof body === "string"
+        ? { body: body }
+        : { json: instanceToPlain(body) }),
+    })
+    .json();
+  return plainToInstance(model, response as object[]);
+}
+
+export async function deleteData(url: string, options?: Options): Promise<void> {
+  await apiClient.delete(url, options);
+}
+
 export async function putData<T extends object, R>(
   url: string,
   body: T,

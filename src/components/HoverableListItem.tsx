@@ -5,7 +5,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { Settings, Trash2 } from "lucide-react";
+import { LucideIcon, Settings, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,7 @@ export function HoverableListItem({
   clickCallback,
   editCallback,
   deleteCallback,
+  thirdAction,
   displayName,
   toolTipDisplay,
   isSelected = false,
@@ -30,6 +31,7 @@ export function HoverableListItem({
   clickCallback: () => void;
   editCallback: () => void;
   deleteCallback: () => void;
+  thirdAction?: { icon: LucideIcon; callback: () => void; toolTipDisplay?: string };
   displayName: string;
   toolTipDisplay: string;
   isSelected: boolean;
@@ -55,6 +57,29 @@ export function HoverableListItem({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+
+        {thirdAction && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="absolute right-12 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 active:opacity-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    thirdAction.callback();
+                  }}
+                >
+                  <thirdAction.icon className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              {thirdAction.toolTipDisplay && (
+                <TooltipContent className={"absolute -bottom-0 -translate-x-1/2"}>
+                  <p>{thirdAction.toolTipDisplay}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+        )}
 
         <TooltipProvider>
           <Tooltip>
