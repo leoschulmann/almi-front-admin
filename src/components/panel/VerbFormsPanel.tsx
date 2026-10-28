@@ -1,5 +1,5 @@
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import { getDataVector } from "@/util/ApiClient.ts";
 import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
 import { VerbForm } from "@/model/VerbForm.ts";
@@ -24,6 +24,18 @@ import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { VerbFormListItem } from "@/components/VerbFormListItem.tsx";
 import { Tense } from "@/model/VerbParameters.ts";
 import { VerbShortDto } from "@/model/Verb";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
+import { ValidateFormsResultDialog } from "@/components/ValidateFormsResultDialog.tsx";
+import { TransliterationResultDialog } from "@/components/TransliterationResultDialog.tsx";
+import { FormPatch } from "@/model/FormPatch.ts";
+import { SelectFormsDialog } from "@/components/SelectFormsDialog.tsx";
+import { Languages, SaveAll, SpellCheck } from "lucide-react";
 
 export function renderTitle(title: string) {
   return (
@@ -44,6 +56,20 @@ export function VerbFormsPanel() {
   const [isLoading, setLoading] = useState(false);
   const { langs } = useDictionaryContext();
   const { lang, setLang } = useSelectedLang();
+  // forms sent for validation; non-null while the result dialog is shown
+  const [validatedForms, setValidatedForms] = useState<VerbForm[] | null>(null);
+  // corrections applied from the validation result, by form id
+  const [translitForms, setTranslitForms] = useState<VerbForm[] | null>(null);
+  const [corrections, setCorrections] = useState<Map<number, FormPatch>>(
+    new Map(),
+  );
+  // savers of the changed form rows (key -> save), see VerbFormListItem
+  const saversRef = useRef(new Map<string, () => Promise<void>>());
+  const [dirtyCount, setDirtyCount] = useState(0);
+  const [savingAll, setSavingAll] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"validate" | "translit" | null>(
+    null,
+  );
 
   useEffect(() => {
     if (langs && langs.length > 0) {
@@ -53,6 +79,7 @@ export function VerbFormsPanel() {
   }, [langs, setLang]);
 
   useEffect(() => {
+    setCorrections(new Map());
     if (verb) {
       void loadVerbForms(verb.id);
     }
@@ -74,6 +101,37 @@ export function VerbFormsPanel() {
     }
   }
 
+  const registerSaver = useCallback(
+    (key: string, save: (() => Promise<void>) | null) => {
+      if (save) saversRef.current.set(key, save);
+      else saversRef.current.delete(key);
+      setDirtyCount(saversRef.current.size);
+    },
+    [],
+  );
+
+  async function saveAll() {
+    // the infinitive goes last: saving it reloads the verb, and the reload drops unsaved rows
+    const keys = [...saversRef.current.keys()].sort(
+      (a, b) =>
+        Number(a.startsWith("INFINITIVE")) - Number(b.startsWith("INFINITIVE")),
+    );
+    setSavingAll(true);
+    let failed = 0;
+    for (const key of keys) {
+      try {
+        await saversRef.current.get(key)?.();
+      } catch (error) {
+        console.error("Failed to save form:", key, error);
+        failed++;
+      }
+    }
+    setSavingAll(false);
+    if (failed > 0) {
+      alert(`Failed to save ${failed} of ${keys.length} forms.`);
+    }
+  }
+
   function mapToComponent(tense: Tense, verbForms: VerbForm[]) {
     return (template: TupleForTenses) => {
       const vform = verbForms
@@ -88,6 +146,8 @@ export function VerbFormsPanel() {
       return (
         <VerbFormListItem
           vform={vform}
+          correction={vform ? corrections.get(vform.id) : undefined}
+          registerSaver={registerSaver}
           tense={tense}
           template={template}
           onSuccessUpsertVerbForm={(respVerbForm: VerbForm) => {
@@ -180,6 +240,63 @@ export function VerbFormsPanel() {
         ) : (
           renderSkeleton(1)
         )}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                disabled={!verb || verbForms.length === 0}
+                onClick={() => setDialogMode("validate")}
+              >
+                <SpellCheck />
+                {lang?.code === "RU" ? "Проверить" : "Validate"}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {lang?.code === "RU"
+                ? "Проверить все формы"
+                : "Validate all forms"}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                disabled={!verb || verbForms.length === 0}
+                onClick={() => setDialogMode("translit")}
+              >
+                <Languages />
+                {lang?.code === "RU" ? "Транслит" : "Translit"}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {lang?.code === "RU"
+                ? "Сгенерировать транслитерацию"
+                : "Generate transliteration"}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                className="ml-auto"
+                disabled={dirtyCount === 0 || savingAll}
+                onClick={() => void saveAll()}
+              >
+                {savingAll ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-black" />
+                ) : (
+                  <SaveAll />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {lang?.code === "RU"
+                ? `Сохранить все изменения (${dirtyCount})`
+                : `Save all changes (${dirtyCount})`}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
       {!verb ? (
         renderMessageCentered("Select a verb")
@@ -189,6 +306,60 @@ export function VerbFormsPanel() {
         <ScrollArea className="flex-grow p-3 overflow-y-auto border-r">
           {renderVerbForms()}
         </ScrollArea>
+      )}
+      <SelectFormsDialog
+        open={dialogMode !== null}
+        onOpenChange={(o) => !o && setDialogMode(null)}
+        title={
+          dialogMode === "validate"
+            ? "Validate forms"
+            : "Generate transliteration"
+        }
+        confirmLabel={dialogMode === "validate" ? "Validate" : "Generate"}
+        forms={verbForms}
+        onConfirm={(selected) => {
+          if (dialogMode === "validate") {
+            setValidatedForms(selected);
+          } else {
+            setTranslitForms(selected);
+          }
+        }}
+      />
+      {verb && validatedForms && (
+        <ValidateFormsResultDialog
+          verbId={verb.id}
+          forms={validatedForms}
+          onClose={() => setValidatedForms(null)}
+          onApply={(applied) =>
+            setCorrections(
+              (prev) =>
+                new Map([
+                  ...prev,
+                  ...[...applied].map(
+                    ([id, value]) => [id, { value }] as [number, FormPatch],
+                  ),
+                ]),
+            )
+          }
+        />
+      )}
+      {translitForms && (
+        <TransliterationResultDialog
+          forms={translitForms}
+          onClose={() => setTranslitForms(null)}
+          onApply={(applied) =>
+            setCorrections(
+              (prev) =>
+                new Map([
+                  ...prev,
+                  ...[...applied].map(
+                    ([id, translits]) =>
+                      [id, { translits }] as [number, FormPatch],
+                  ),
+                ]),
+            )
+          }
+        />
       )}
     </div>
   );

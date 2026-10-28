@@ -21,6 +21,7 @@ import {
   toTensePerson,
 } from "@/model/VerbParameters.ts";
 import { EditVerbDto, VerbShortDto } from "@/model/Verb.ts";
+import { FormPatch } from "@/model/FormPatch.ts";
 
 function getTransliteration(
   verbForm: VerbForm,
@@ -29,22 +30,30 @@ function getTransliteration(
   return verbForm.transliterations.find((t) => t.lang === lang.code);
 }
 
+// all transliterations as one comparable string, so a change in any language counts
+function translitsKey(verbForm: VerbForm): string {
+  return verbForm.transliterations
+    .map((t) => `${t.lang}:${t.value}`)
+    .sort()
+    .join("|");
+}
+
 function setTransliteration(
   verbForm: VerbForm,
-  lang: Lang,
+  langCode: string,
   value: string,
 ): VerbForm {
   let translits = verbForm.transliterations;
 
-  if (getTransliteration(verbForm, lang)) {
+  if (verbForm.transliterations.some((t) => t.lang === langCode)) {
     // update existing by lang code
     translits = translits.map((t) =>
-      t.lang === lang.code ? { ...t, value: value } : t,
+      t.lang === langCode ? { ...t, value: value } : t,
     );
   } else {
     translits = [
       ...translits,
-      new VFormTransliteration(undefined, value, undefined, lang.code),
+      new VFormTransliteration(undefined, value, undefined, langCode),
     ];
   }
 
@@ -112,12 +121,18 @@ export function VerbFormListItem({
   template,
   onSuccessUpsertVerbForm,
   onSuccessUpdateVerb,
+  correction,
+  registerSaver,
 }: {
   vform: VerbForm | undefined;
   tense: Tense;
   template: TupleForTenses;
   onSuccessUpsertVerbForm: (respVForm: VerbForm) => void;
   onSuccessUpdateVerb: (respVerb: VerbShortDto) => void;
+  // value proposed from outside (e.g. almi-ai); put into the field, saving stays manual
+  correction?: FormPatch;
+  // lets the panel save every changed form at once; null means nothing to save
+  registerSaver?: (key: string, save: (() => Promise<void>) | null) => void;
 }) {
   const { lang } = useSelectedLang();
   const { setVerb, verb } = useSelectedVerb();
@@ -129,10 +144,24 @@ export function VerbFormListItem({
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
+    if (correction) {
+      setMutableVform((prev) => {
+        let next: VerbForm = {
+          ...prev,
+          value: correction.value ?? prev.value,
+        };
+        for (const [code, text] of Object.entries(correction.translits ?? {})) {
+          next = setTransliteration(next, code, text);
+        }
+        return next;
+      });
+    }
+  }, [correction]);
+
+  useEffect(() => {
     const verbValueChanged: boolean = mutableVform.value !== reference.value;
     const translitValueChanged: boolean =
-      getTransliteration(mutableVform, lang)?.value !==
-      getTransliteration(reference, lang)?.value;
+      translitsKey(mutableVform) !== translitsKey(reference);
 
     setShowSaveBtn(verbValueChanged || translitValueChanged);
   }, [mutableVform, lang, verb, reference]);
@@ -173,19 +202,31 @@ export function VerbFormListItem({
           value: updateVerbResponse.value,
         };
         setVerb(verb1);
-        
-        onSuccessUpdateVerb(updateVerbResponse); 
+
+        onSuccessUpdateVerb(updateVerbResponse);
       }
 
       setMutableVform(upsertVerbFormResponse);
       setReference(upsertVerbFormResponse);
       setVformExists(true);
-      onSuccessUpsertVerbForm(upsertVerbFormResponse)
+      onSuccessUpsertVerbForm(upsertVerbFormResponse);
     } finally {
       setShowSaveBtn(false);
       setSending(false);
     }
   };
+
+  const saverKey = `${tense}-${template.gender}-${template.person}-${template.plurality}`;
+
+  // re-registered on every render so the panel always calls the latest closure
+  useEffect(() => {
+    registerSaver?.(saverKey, showSaveBtn ? handleClickSave : null);
+  });
+
+  useEffect(() => {
+    return () => registerSaver?.(saverKey, null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saverKey]);
 
   return (
     <li
@@ -242,7 +283,7 @@ export function VerbFormListItem({
           value={getTransliteration(mutableVform, lang)?.value ?? ""}
           onChange={(e) =>
             setMutableVform(
-              setTransliteration(mutableVform, lang, e.target.value),
+              setTransliteration(mutableVform, lang.code, e.target.value),
             )
           }
           showWarning={
