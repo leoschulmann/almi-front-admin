@@ -108,6 +108,8 @@ export const createVerbSchema = z.object({
   prepositionId: z.array(z.number()),
   translations: z.array(
     z.object({
+      // set for existing translations of a verb being edited
+      id: z.number().optional(),
       value: z.string(),
       lang: z.string(),
     }),

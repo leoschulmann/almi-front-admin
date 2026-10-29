@@ -73,6 +73,64 @@ export async function aiTransliterate(
   return await aiClient.post("transliterate", { json: { texts } }).json();
 }
 
+export interface AiMeaningsRequest {
+  root: string;
+  binyan: string;
+  gizrot: string[];
+  infinitive: string;
+  languages?: string[];
+}
+
+export interface AiMeaningsResponse {
+  infinitive: string;
+  recognized: boolean;
+  correction: string | null;
+  // by lang code (EN, RU); empty when not recognized
+  translations: Record<string, string[]>;
+  prepositions: string[];
+  note: string;
+  tokens: AiTokenUsage | null;
+}
+
+export async function aiMeanings(
+  request: AiMeaningsRequest,
+): Promise<AiMeaningsResponse> {
+  return await aiClient.post("verbs/meanings", { json: request }).json();
+}
+
+export interface AiExampleSentence {
+  sentence: string;
+  // by lang code (EN, RU)
+  translations: Record<string, string>;
+}
+
+export interface AiExampleResult {
+  index: number;
+  form: string;
+  examples: AiExampleSentence[] | null;
+  error: string | null;
+}
+
+export interface AiExamplesRequest {
+  root: string;
+  binyan: string;
+  gizrot: string[];
+  forms: AiFormCell[];
+  languages?: string[];
+  perForm?: number;
+}
+
+export interface AiExamplesResponse {
+  results: AiExampleResult[];
+  tokens: AiTokenUsage | null;
+}
+
+export async function aiExamples(
+  request: AiExamplesRequest,
+): Promise<AiExamplesResponse> {
+  return await aiClient.post("verbs/examples", { json: request }).json();
+}
+
 export async function aiValidateForms(
   request: AiValidateFormsRequest,
 ): Promise<AiValidateFormsResponse> {

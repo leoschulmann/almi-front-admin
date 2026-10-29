@@ -25,6 +25,8 @@ interface Props {
   confirmLabel: string;
   forms: VerbForm[];
   onConfirm: (selected: VerbForm[]) => void;
+  // forms checked when the dialog opens; all of them by default
+  isInitiallyChecked?: (form: VerbForm) => boolean;
 }
 
 export function SelectFormsDialog({
@@ -34,15 +36,31 @@ export function SelectFormsDialog({
   confirmLabel,
   forms,
   onConfirm,
+  isInitiallyChecked = () => true,
 }: Props) {
   const [checked, setChecked] = useState<Set<number>>(new Set());
 
   // all forms are checked every time the dialog opens
   useEffect(() => {
     if (open) {
-      setChecked(new Set(forms.map((f) => f.id)));
+      setChecked(new Set(forms.filter(isInitiallyChecked).map((f) => f.id)));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, forms]);
+
+  function checkAll() {
+    setChecked(new Set(forms.map((f) => f.id)));
+  }
+
+  function uncheckAll() {
+    setChecked(new Set());
+  }
+
+  function invert() {
+    setChecked(
+      new Set(forms.filter((f) => !checked.has(f.id)).map((f) => f.id)),
+    );
+  }
 
   function toggle(id: number) {
     setChecked((prev) => {
@@ -84,6 +102,17 @@ export function SelectFormsDialog({
           ))}
         </div>
         <DialogFooter>
+          <div className="mr-auto flex gap-2">
+            <Button variant="outline" size="sm" onClick={checkAll}>
+              Check all
+            </Button>
+            <Button variant="outline" size="sm" onClick={uncheckAll}>
+              Uncheck all
+            </Button>
+            <Button variant="outline" size="sm" onClick={invert}>
+              Invert
+            </Button>
+          </div>
           <Button
             disabled={checked.size === 0}
             onClick={() => {

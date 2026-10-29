@@ -2,7 +2,9 @@ import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
 import { deleteData, getDataVector } from "@/util/ApiClient.ts";
 import { useEffect, useState } from "react";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
-import CreateVerbDialogButton from "@/components/CreateVerbDialogButton.tsx";
+import CreateVerbDialogButton, {
+  VerbDialog,
+} from "@/components/CreateVerbDialogButton.tsx";
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
@@ -20,6 +22,7 @@ function VerbsPanel() {
   const { lang } = useSelectedLang();
   const [stampVerbId, setStampVerbId] = useState<number | null>(null);
   const [isStampDialogOpen, setStampDialogOpen] = useState(false);
+  const [editVerbId, setEditVerbId] = useState<number | null>(null);
 
   const fetchVerbs = async (rootId: number): Promise<void> => {
     setLoading(true);
@@ -37,7 +40,7 @@ function VerbsPanel() {
   useEffect(() => {
     if (selectedRoot) {
       void fetchVerbs(selectedRoot.id);
-      setVerb(null)
+      setVerb(null);
     }
   }, [selectedRoot, setVerb]);
 
@@ -69,7 +72,7 @@ function VerbsPanel() {
           <HoverableListItem
             key={dto.id}
             clickCallback={() => setVerb(dto)}
-            editCallback={() => {}}
+            editCallback={() => setEditVerbId(dto.id)}
             deleteCallback={() => handleDeleteVerb(dto.id)}
             thirdAction={{
               icon: Stamp,
@@ -121,6 +124,25 @@ function VerbsPanel() {
                   `Nothing found for '${selectedRoot?.name}' 😕`,
                 )}
       </ScrollArea>
+      <VerbDialog
+        open={editVerbId !== null}
+        onOpenChange={(o) => !o && setEditVerbId(null)}
+        editVerbId={editVerbId}
+        onUpdated={(updated) =>
+          setDtos((prev) =>
+            prev.map((d) =>
+              d.id === updated.id
+                ? new VerbShortDto(
+                    updated.id,
+                    updated.value,
+                    updated.version,
+                    updated.translations,
+                  )
+                : d,
+            ),
+          )
+        }
+      />
       <StampVerbDialog
         open={isStampDialogOpen}
         onOpenChange={setStampDialogOpen}

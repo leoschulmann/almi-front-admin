@@ -14,7 +14,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
+import { aiExamples } from "@/util/AiClient.ts";
+import { AI_LANGS, loadAiVerbContext } from "@/util/AiVerbContext.ts";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,7 +52,9 @@ export function CreateVFExampleDialogButton({
 }) {
   const [isOpen, setOpen] = useState<boolean>(false);
   const [sending, setSending] = useState<boolean>(false);
-  const { verbForms } = useSelectedVerb();
+  const { verb, verbForms } = useSelectedVerb();
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [localForms, setLocalForms] = useState<VerbForm[]>([]);
 
   const defaultCreateVFormExampleDto: CreateVFormExampleDto = {
@@ -69,6 +73,55 @@ export function CreateVFExampleDialogButton({
       setLocalForms(verbForms.filter((vf) => vf.value.length > 0));
     }
   }, [isOpen, verbForms]);
+
+  // fills the sentence and its translations for the chosen verb form
+  async function suggestExample() {
+    const formId = form.getValues("verbFormId");
+    const vf = verbForms.find((f) => f.id === formId);
+    if (!verb || !vf) {
+      setAiError("Select a verb form first.");
+      return;
+    }
+
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const context = await loadAiVerbContext(verb.id);
+      const response = await aiExamples({
+        ...context,
+        forms: [
+          {
+            tense: vf.tense,
+            person: vf.person,
+            plurality: vf.plurality,
+            gender: vf.gender,
+            form: vf.value,
+          },
+        ],
+        languages: AI_LANGS,
+        perForm: 1,
+      });
+      const result = response.results[0];
+      const example = result?.examples?.[0];
+      if (!example) {
+        setAiError(result?.error ?? "No example was generated.");
+        return;
+      }
+      form.setValue("value", example.sentence, { shouldValidate: true });
+      form.setValue(
+        "translations",
+        Object.entries(example.translations).map(([lang, value]) => ({
+          value,
+          lang,
+        })),
+      );
+    } catch (error) {
+      console.error("Example generation failed:", error);
+      setAiError("Request failed. Is almi-ai running?");
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
@@ -219,12 +272,30 @@ export function CreateVFExampleDialogButton({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Example</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Example sentence in Hebrew"
-                      {...field}
-                    />
-                  </FormControl>
+                  <div className="flex items-start gap-2">
+                    <FormControl>
+                      <Textarea
+                        placeholder="Example sentence in Hebrew"
+                        {...field}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0"
+                      disabled={aiLoading}
+                      title="Generate an example sentence with translations for the selected form"
+                      onClick={() => void suggestExample()}
+                    >
+                      {aiLoading ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-black" />
+                      ) : (
+                        <Sparkles />
+                      )}
+                    </Button>
+                  </div>
+                  {aiError && <p className="text-sm text-red-600">{aiError}</p>}
                 </FormItem>
               )}
             />
