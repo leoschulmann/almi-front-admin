@@ -34,9 +34,13 @@ import {
 } from "@/model/VerbForm.ts";
 import { Root, RootPage } from "@/model/Root.ts";
 import { InputRoot } from "@/components/InputRoot.tsx";
+import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
 import { PreviewRow, stampVerb } from "@/util/VerbStamper.ts";
 import { toPluralityGender, toTensePerson } from "@/model/VerbParameters.ts";
-import { CreateVerbTranslation, VerbTranslation } from "@/model/VerbTranslation.ts";
+import {
+  CreateVerbTranslation,
+  VerbTranslation,
+} from "@/model/VerbTranslation.ts";
 import { TranslationsField } from "@/components/TranslationsField.tsx";
 
 interface EditablePreviewRow {
@@ -65,24 +69,18 @@ export function StampVerbDialog({
   const [loadingModel, setLoadingModel] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const { selectedRoot, setSelectedRoot, notifyRootsChanged } =
+    useSelectedRoot();
   const [roots, setRoots] = useState<Root[]>([]);
 
-  const [targetGlyphs, setTargetGlyphs] = useState<string[]>([
-    "",
-    "",
-    "",
-    "",
-  ]);
-  const targetRootValue = targetGlyphs.filter(Boolean).join("");
+  const [targetRootValue, setTargetRootValue] = useState("");
 
   const [previewRows, setPreviewRows] = useState<EditablePreviewRow[]>([]);
   const [stampError, setStampError] = useState<string | null>(null);
 
   const [conflictValue, setConflictValue] = useState<string | null>(null);
 
-  const [translations, setTranslations] = useState<CreateVerbTranslation[]>(
-    [],
-  );
+  const [translations, setTranslations] = useState<CreateVerbTranslation[]>([]);
   // TranslationsField renders shadcn FormLabel/FormItem, which need a
   // react-hook-form context to exist even though this dialog doesn't use
   // react-hook-form for its own state (see CreateVerbDialogButton for the
@@ -100,7 +98,7 @@ export function StampVerbDialog({
 
     setLoadingModel(true);
     setLoadError(null);
-    setTargetGlyphs(["", "", "", ""]);
+    setTargetRootValue("");
     setPreviewRows([]);
     setStampError(null);
     setConflictValue(null);
@@ -217,7 +215,7 @@ export function StampVerbDialog({
     onOpenChange(false);
     setModelVerb(null);
     setModelForms([]);
-    setTargetGlyphs(["", "", "", ""]);
+    setTargetRootValue("");
     setPreviewRows([]);
     setConflictValue(null);
     setSaveError(null);
@@ -243,11 +241,13 @@ export function StampVerbDialog({
       // Resolve the target root: reuse an already-loaded exact match, or
       // create it only now (not on every keystroke) to avoid garbage Root
       // rows from unfinished input.
-      let targetRootId = matchedRoot?.id ?? null;
-      if (targetRootId === null) {
-        const createdRoot = await postData("root", targetRootValue, Root);
-        targetRootId = createdRoot.id;
+      let targetRoot: Root | null = matchedRoot;
+      if (targetRoot === null) {
+        targetRoot = await postData("root", targetRootValue, Root);
+        // the roots panel owns the list: ask it to reload
+        notifyRootsChanged();
       }
+      const targetRootId = targetRoot.id;
 
       // Binyan and gizrahs are copied 1:1 from the model verb; prepositions
       // stay empty (no existing edit flow to fill them in later, but they
@@ -281,7 +281,17 @@ export function StampVerbDialog({
 
         await postDataVector("vform/bulk", bulkDto, VerbForm);
 
-        onSuccess(newVerb.id, newVerb.value, newVerb.version, newVerb.translations);
+        if (selectedRoot?.id === targetRootId) {
+          onSuccess(
+            newVerb.id,
+            newVerb.value,
+            newVerb.version,
+            newVerb.translations,
+          );
+        } else {
+          // the stamped verb belongs to another root: go there, its verbs reload
+          setSelectedRoot(targetRoot);
+        }
         resetAndClose();
       } catch (bulkError) {
         // AD-6: createVerb succeeded but bulk failed — surface the orphaned
@@ -307,9 +317,7 @@ export function StampVerbDialog({
   async function handleDeleteOrphan() {
     if (orphanVerbId === null) return;
     if (
-      !confirm(
-        `Delete orphaned verb ${orphanVerbId}? This cannot be undone.`,
-      )
+      !confirm(`Delete orphaned verb ${orphanVerbId}? This cannot be undone.`)
     ) {
       return;
     }
@@ -356,7 +364,10 @@ export function StampVerbDialog({
           <div className="flex-grow flex flex-col gap-4 overflow-hidden">
             <div className="flex items-center gap-4">
               <span className="font-medium">Target root:</span>
-              <InputRoot glyphs={targetGlyphs} setGlyphs={setTargetGlyphs} />
+              <InputRoot
+                value={targetRootValue}
+                onChange={setTargetRootValue}
+              />
               {matchedRoot ? (
                 <span className="text-sm text-muted-foreground">
                   existing root (id {matchedRoot.id})
@@ -380,8 +391,8 @@ export function StampVerbDialog({
 
             {conflictValue && (
               <div className="text-red-500 text-sm">
-                Verb "{conflictValue}" already exists for this root. Change
-                the target root or edit the infinitive value below.
+                Verb "{conflictValue}" already exists for this root. Change the
+                target root or edit the infinitive value below.
               </div>
             )}
 

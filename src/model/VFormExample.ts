@@ -115,6 +115,8 @@ export const createVFormExampleDtoSchema = z.object({
   file: z.string().optional().nullable(),
   translations: z.array(
     z.object({
+      // set for existing translations of an example being edited
+      id: z.number().optional(),
       value: z.string(),
       lang: z.string(),
     }),

@@ -1,8 +1,6 @@
 import {
   Dialog,
-  DialogClose,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -13,55 +11,64 @@ import { postData } from "@/util/ApiClient.ts";
 import { Root } from "@/model/Root.ts";
 import { useState } from "react";
 import { InputRoot } from "@/components/InputRoot.tsx";
+import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
+import { byLang } from "@/util/Common.tsx";
 
 export function CreateRootDialog({ onSuccess }: { onSuccess: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [rootGlyphs, setRootGlyphs] = useState(["", "", "", ""]);
+  const [rootValue, setRootValue] = useState("");
   const [sending, setSending] = useState(false);
+  const { lang } = useSelectedLang();
+
+  async function handleSubmit() {
+    setSending(true);
+    try {
+      await postData("root", rootValue, Root);
+      setIsOpen(false);
+      setRootValue("");
+      onSuccess();
+    } catch (e) {
+      console.error("Ошибка при создании корня:", e);
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        // closing in any way (Esc, outside click) clears the input
+        if (!open) setRootValue("");
+      }}
+    >
       <DialogTrigger asChild>
-        <Button className="h-9 w-fit pl-2 pr-4 flex items-center justify-center bg-blue-500 text-white rounded hover:bg-blue-600">
-          <Plus className="h-5 w-5" /> root
+        <Button className="h-9 w-fit shrink-0 pl-2 pr-4 flex items-center justify-center bg-blue-500 text-white rounded hover:bg-blue-600">
+          <Plus className="h-5 w-5" /> {byLang(lang.code, "root", "корень")}
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-96">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create Root</DialogTitle>
+          <DialogTitle>
+            {byLang(lang.code, "Create root", "Создать корень")}
+          </DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
-          <InputRoot glyphs={rootGlyphs} setGlyphs={setRootGlyphs} />
-        </div>
-        <DialogFooter>
-          <DialogClose>
-            <button className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-              Cancel
-            </button>
-          </DialogClose>
-          <button
-            className="w-1/4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center justify-center"
-            disabled={sending}
-            onClick={async () => {
-              setSending(true);
-
-              try {
-                await postData("root", rootGlyphs.join(""), Root);
-              } finally {
-                setSending(false);
-                setIsOpen(false);
-                setRootGlyphs(["", "", "", ""]);
-                onSuccess();
-              }
-            }}
+        <div className="grid gap-4 py-4">
+          <div className="flex justify-center">
+            <InputRoot value={rootValue} onChange={setRootValue} />
+          </div>
+          <Button
+            onClick={() => void handleSubmit()}
+            disabled={sending || rootValue.length === 0}
           >
             {sending ? (
               <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
             ) : (
-              "Submit"
+              byLang(lang.code, "Save", "Сохранить")
             )}
-          </button>
-        </DialogFooter>
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

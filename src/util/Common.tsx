@@ -13,9 +13,14 @@ import {
   Plurality,
 } from "@/model/VerbParameters.ts";
 
+// UI text by the selected language (labels exist in EN and RU)
+export function byLang(langCode: string, en: string, ru: string): string {
+  return langCode === "RU" ? ru : en;
+}
+
 export function renderMessageCentered(message: string) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm text-center">
+    <div className="flex flex-1 flex-col items-center justify-center h-full text-gray-400 text-sm text-center">
       <p>{message}</p>
     </div>
   );

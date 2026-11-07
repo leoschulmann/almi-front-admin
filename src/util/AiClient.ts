@@ -73,15 +73,15 @@ export async function aiTransliterate(
   return await aiClient.post("transliterate", { json: { texts } }).json();
 }
 
-export interface AiMeaningsRequest {
+export interface AiTranslationsRequest {
   root: string;
   binyan: string;
-  gizrot: string[];
+  // the verb as typed by the user: niqqud may be missing or imprecise
   infinitive: string;
   languages?: string[];
 }
 
-export interface AiMeaningsResponse {
+export interface AiTranslationsResponse {
   infinitive: string;
   recognized: boolean;
   correction: string | null;
@@ -92,10 +92,10 @@ export interface AiMeaningsResponse {
   tokens: AiTokenUsage | null;
 }
 
-export async function aiMeanings(
-  request: AiMeaningsRequest,
-): Promise<AiMeaningsResponse> {
-  return await aiClient.post("verbs/meanings", { json: request }).json();
+export async function aiTranslations(
+  request: AiTranslationsRequest,
+): Promise<AiTranslationsResponse> {
+  return await aiClient.post("verbs/translations", { json: request }).json();
 }
 
 export interface AiExampleSentence {
@@ -118,6 +118,8 @@ export interface AiExamplesRequest {
   forms: AiFormCell[];
   languages?: string[];
   perForm?: number;
+  // accepted translations of the verb by language code
+  translations?: Record<string, string[]>;
 }
 
 export interface AiExamplesResponse {

@@ -1,10 +1,19 @@
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import {
   renderIcon,
+  byLang,
   renderMessageCentered,
   renderSkeleton,
 } from "@/util/Common.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
+import { useDictionaryContext } from "@/ctx/InitialDictionariesLoadCtx.tsx";
 import { ReactElement, useEffect, useState } from "react";
 import { VerbForm } from "@/model/VerbForm.ts";
 import { VFormExample } from "@/model/VFormExample.ts";
@@ -20,16 +29,21 @@ import {
 import { renderTitle } from "@/components/panel/VerbFormsPanel.tsx";
 import { Tense } from "@/model/VerbParameters.ts";
 import { Button } from "@/components/ui/button.tsx";
-import { Sparkles } from "lucide-react";
+import { Settings, Sparkles } from "lucide-react";
 import { SelectFormsDialog } from "@/components/SelectFormsDialog.tsx";
 import { GenerateExamplesResultDialog } from "@/components/GenerateExamplesResultDialog.tsx";
-import { CreateVFExampleDialogButton } from "@/components/CreateVFExampleDialogButton.tsx";
+import {
+  CreateVFExampleDialogButton,
+  ExampleDialog,
+} from "@/components/CreateVFExampleDialogButton.tsx";
 
 export function VerbExamplesPanel() {
   const { verb, verbForms } = useSelectedVerb();
-  const { lang } = useSelectedLang();
+  const { lang, setLang } = useSelectedLang();
+  const { langs } = useDictionaryContext();
   const [isLoading, setLoading] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [editExample, setEditExample] = useState<VFormExample | null>(null);
   // forms chosen for generation; non-null while the result dialog is shown
   const [generateForms, setGenerateForms] = useState<VerbForm[] | null>(null);
   const [examples, setExamples]: [
@@ -72,14 +86,22 @@ export function VerbExamplesPanel() {
 
       return formExamples.map((example) => (
         <li key={example.id}>
-          <div className={"pt-1 pb-1 flex items-center gap-3"}>
-            <p>{example.value}</p>
+          <div className={"pt-1 pb-1 flex items-center gap-3 group"}>
+            <p dir="rtl">{example.value}</p>
             {renderIcon(tft.gender, tft.person, tft.plurality, "w-9 h-9 p-1.5")}
             <p>
               {example.translations.find((t) => {
                 return t.lang === lang.code;
               })?.value ?? "-- EMPTY --"}
             </p>
+            <button
+              type="button"
+              title="Edit"
+              className="ml-auto p-1 rounded bg-gray-100 opacity-0 group-hover:opacity-100 active:opacity-50"
+              onClick={() => setEditExample(example)}
+            >
+              <Settings className="h-4 w-4" />
+            </button>
           </div>
         </li>
       ));
@@ -142,12 +164,17 @@ export function VerbExamplesPanel() {
         getTranslationComponent("IMPERATIVE"),
       ).forEach((e) => content.push(e));
     }
+    if (content.length === 0) {
+      return renderMessageCentered(
+        byLang(lang.code, "No examples yet", "Примеров пока нет"),
+      );
+    }
     return <ul>{content}</ul>;
   }
 
   return (
-    <div className="h-screen flex-grow">
-      <div className="p-3 flex flex-col gap-3">
+    <div className="h-screen flex-grow flex flex-col">
+      <div className="p-3 flex flex-col gap-3 flex-grow">
         <div className="flex gap-3">
           <CreateVFExampleDialogButton
             enabled={!!verb}
@@ -165,10 +192,35 @@ export function VerbExamplesPanel() {
             <Sparkles />
             Generate examples
           </Button>
+          {lang && langs.length > 0 ? (
+            <Select
+              value={lang.name}
+              onValueChange={(e) =>
+                setLang(langs.find((l) => l.name === e) ?? langs[0])
+              }
+            >
+              <SelectTrigger className="ml-auto w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {langs.map(({ code, name }) => {
+                  return (
+                    <SelectItem key={code} value={name}>
+                      {name}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          ) : (
+            <span className="ml-auto" />
+          )}
         </div>
         <div className="flex flex-grow flex-col">
           {!verb
-            ? renderMessageCentered("Select a verb")
+            ? renderMessageCentered(
+                byLang(lang.code, "Select a verb", "Выберите глагол"),
+              )
             : isLoading
               ? renderSkeleton(10)
               : renderExamples()}
@@ -191,6 +243,19 @@ export function VerbExamplesPanel() {
           )
         }
         onConfirm={setGenerateForms}
+      />
+      <ExampleDialog
+        open={editExample !== null}
+        onOpenChange={(o) => !o && setEditExample(null)}
+        editExample={editExample}
+        onSaved={(saved) =>
+          setExamples((prev) =>
+            prev.map((e) => (e.id === saved.id ? saved : e)),
+          )
+        }
+        onDeleted={(id) =>
+          setExamples((prev) => prev.filter((e) => e.id !== id))
+        }
       />
       {verb && generateForms && (
         <GenerateExamplesResultDialog

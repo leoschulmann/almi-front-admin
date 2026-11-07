@@ -1,71 +1,69 @@
-import React, { useRef } from "react";
+import { ClipboardEvent, KeyboardEvent, useEffect, useRef } from "react";
+import { rootLetterFromKey, rootLettersFromText } from "@/util/HebrewUtil.ts";
 
+// Root input: the cells only draw `value`, a gap-free string. Letters are only appended to the
+// end and Backspace removes the last one; the focus is always on the first empty cell (the last
+// cell when full). Letters come from the physical key, so any keyboard layout works.
 export function InputRoot({
-  glyphs,
-  setGlyphs,
+  value,
+  onChange,
+  length = 4,
 }: {
-  glyphs: string[];
-  setGlyphs: (value: ((prevState: string[]) => string[]) | string[]) => void;
+  value: string;
+  onChange: (value: string) => void;
+  length?: number;
 }) {
-  const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
+  const cellsRef = useRef<Array<HTMLInputElement | null>>([]);
+  const focusedRef = useRef(false);
+  const letters = [...value];
+  const activeCell = Math.min(letters.length, length - 1);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number,
-  ) => {
-    const letter = e.target.value;
-    const isValidHebrew = /^[\u0590-\u05FF]$/.test(letter);
+  // the focus follows the active cell once the new value is rendered
+  useEffect(() => {
+    if (focusedRef.current) cellsRef.current[activeCell]?.focus();
+  }, [activeCell, value]);
 
-    if (!isValidHebrew && letter !== "") return;
+  function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return; // copy / paste shortcuts
+    if (e.key === "Tab" || e.key === "Enter" || e.key === "Escape") return;
 
-    const allLetters = [...glyphs];
-    allLetters[index] = letter;
-    setGlyphs(allLetters);
-
-    if (letter && index >= 0) {
-      inputsRef.current[index + 1]?.focus();
+    e.preventDefault();
+    if (e.key === "Backspace" || e.key === "Delete") {
+      onChange(letters.slice(0, -1).join(""));
+      return;
     }
-  };
+    if (e.key.length !== 1 || letters.length >= length) return;
+    const letter = rootLetterFromKey(e.key, e.code);
+    if (letter) onChange(value + letter);
+  }
 
-  const handleKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    index: number,
-  ) => {
-    if (e.key === "Backspace") {
-      const newValues = [...glyphs];
-      newValues[index] = "";
-      setGlyphs(newValues);
-
-      if (index < glyphs.length - 1) {
-        inputsRef.current[index - 1]?.focus();
-      }
-    }
-  };
-
-  const handleFocus = (
-    e: React.FocusEvent<HTMLInputElement>,
-    index: number,
-  ) => {
-    if (e.target.value.length > 0) {
-      e.target.setSelectionRange(1, 1);
-    }
-  };
+  function handlePaste(e: ClipboardEvent<HTMLInputElement>) {
+    e.preventDefault();
+    const pasted = rootLettersFromText(e.clipboardData.getData("text"));
+    onChange([...letters, ...pasted].slice(0, length).join(""));
+  }
 
   return (
     <div dir="rtl" className="flex items-center gap-2">
-      {glyphs.map((glyph, index) => (
+      {Array.from({ length }, (_, index) => (
         <input
           key={index}
-          ref={function (el: HTMLInputElement | null): void {
-            inputsRef.current[index] = el;
+          ref={(el) => {
+            cellsRef.current[index] = el;
           }}
           type="text"
-          value={glyph}
-          onChange={(e) => handleChange(e, index)}
-          onKeyDown={(e) => handleKeyDown(e, index)}
-          onFocus={(e) => handleFocus(e, index)}
-          maxLength={1}
-          className="w-16 h-16 text-3xl text-center border rounded-lg focus:outline-none"
+          readOnly
+          value={letters[index] ?? ""}
+          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+          onFocus={() => {
+            focusedRef.current = true;
+            if (index !== activeCell) cellsRef.current[activeCell]?.focus();
+          }}
+          onBlur={() => {
+            focusedRef.current = false;
+          }}
+          className="w-16 h-16 text-3xl text-center border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 caret-transparent cursor-text"
         />
       ))}
     </div>

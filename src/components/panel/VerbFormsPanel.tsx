@@ -1,7 +1,11 @@
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
 import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import { getDataVector } from "@/util/ApiClient.ts";
-import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
+import {
+  byLang,
+  renderMessageCentered,
+  renderSkeleton,
+} from "@/util/Common.tsx";
 import { VerbForm } from "@/model/VerbForm.ts";
 import {
   FUTURE_VERB_FORM_TEMPLATES,
@@ -13,13 +17,6 @@ import {
 } from "@/util/VerbFormCombinator.ts";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { useDictionaryContext } from "@/ctx/InitialDictionariesLoadCtx.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { VerbFormListItem } from "@/components/VerbFormListItem.tsx";
 import { Tense } from "@/model/VerbParameters.ts";
@@ -35,7 +32,7 @@ import { ValidateFormsResultDialog } from "@/components/ValidateFormsResultDialo
 import { TransliterationResultDialog } from "@/components/TransliterationResultDialog.tsx";
 import { FormPatch } from "@/model/FormPatch.ts";
 import { SelectFormsDialog } from "@/components/SelectFormsDialog.tsx";
-import { Languages, SaveAll, SpellCheck } from "lucide-react";
+import { SaveAll, Sparkles } from "lucide-react";
 
 export function renderTitle(title: string) {
   return (
@@ -217,29 +214,6 @@ export function VerbFormsPanel() {
   return (
     <div className="h-screen w-[500px] flex flex-col">
       <div className="p-3 flex items-center gap-3">
-        {lang ? (
-          <Select
-            value={lang.name}
-            onValueChange={(e) =>
-              setLang(langs.find((l) => l.name === e) ?? langs[0])
-            }
-          >
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {langs.map(({ code, name }) => {
-                return (
-                  <SelectItem key={code} value={name}>
-                    {name}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        ) : (
-          renderSkeleton(1)
-        )}
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -248,7 +222,7 @@ export function VerbFormsPanel() {
                 disabled={!verb || verbForms.length === 0}
                 onClick={() => setDialogMode("validate")}
               >
-                <SpellCheck />
+                <Sparkles />
                 {lang?.code === "RU" ? "Проверить" : "Validate"}
               </Button>
             </TooltipTrigger>
@@ -265,7 +239,7 @@ export function VerbFormsPanel() {
                 disabled={!verb || verbForms.length === 0}
                 onClick={() => setDialogMode("translit")}
               >
-                <Languages />
+                <Sparkles />
                 {lang?.code === "RU" ? "Транслит" : "Translit"}
               </Button>
             </TooltipTrigger>
@@ -299,9 +273,13 @@ export function VerbFormsPanel() {
         </TooltipProvider>
       </div>
       {!verb ? (
-        renderMessageCentered("Select a verb")
+        <div className="flex flex-col flex-grow border-r p-3">
+          {renderMessageCentered(
+            byLang(lang.code, "Select a verb", "Выберите глагол"),
+          )}
+        </div>
       ) : isLoading ? (
-        renderSkeleton(15)
+        <div className="flex-grow border-r p-3">{renderSkeleton(15)}</div>
       ) : (
         <ScrollArea className="flex-grow p-3 overflow-y-auto border-r">
           {renderVerbForms()}

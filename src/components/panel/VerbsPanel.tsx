@@ -1,16 +1,21 @@
 import { useSelectedRoot } from "@/ctx/SelectedRootCtx.tsx";
 import { deleteData, getDataVector } from "@/util/ApiClient.ts";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import CreateVerbDialogButton, {
   VerbDialog,
 } from "@/components/CreateVerbDialogButton.tsx";
 import { useSelectedVerb } from "@/ctx/SelectedVerbCtx.tsx";
-import { renderMessageCentered, renderSkeleton } from "@/util/Common.tsx";
+import {
+  byLang,
+  renderMessageCentered,
+  renderSkeleton,
+} from "@/util/Common.tsx";
 import { useSelectedLang } from "@/ctx/SelectedLangCtx.tsx";
 import { VerbTranslation } from "@/model/VerbTranslation.ts";
 import { HoverableListItem } from "@/components/HoverableListItem.tsx";
 import { VerbShortDto } from "@/model/Verb.ts";
+import { dashedRoot } from "@/util/HebrewUtil.ts";
 import { Stamp } from "lucide-react";
 import { StampVerbDialog } from "@/components/StampVerbDialog.tsx";
 
@@ -24,11 +29,18 @@ function VerbsPanel() {
   const [isStampDialogOpen, setStampDialogOpen] = useState(false);
   const [editVerbId, setEditVerbId] = useState<number | null>(null);
 
+  // the root of the latest request: a slow answer for a previous root must not open its verb
+  const latestRootId = useRef<number | null>(null);
+
   const fetchVerbs = async (rootId: number): Promise<void> => {
+    latestRootId.current = rootId;
     setLoading(true);
     try {
       const verbs = await getDataVector(`verb/root/${rootId}`, VerbShortDto);
+      if (latestRootId.current !== rootId) return;
       setDtos(verbs);
+      // opening a root opens its first verb
+      setVerb(verbs[0] ?? null);
     } catch (error) {
       console.error("Error loading data:", error);
       setDtos([]);
@@ -115,13 +127,19 @@ function VerbsPanel() {
       </div>
       <ScrollArea className="flex-grow p-3 overflow-y-auto border-r">
         {!selectedRoot
-          ? renderMessageCentered("Select a root")
+          ? renderMessageCentered(
+              byLang(lang.code, "Select a root", "Выберите корень"),
+            )
           : isLoading
             ? renderSkeleton(15)
             : dtos.length > 0
               ? renderVerbList()
               : renderMessageCentered(
-                  `Nothing found for '${selectedRoot?.name}' 😕`,
+                  byLang(
+                    lang.code,
+                    `Nothing found for '${dashedRoot(selectedRoot.name)}' 😕`,
+                    `Для '${dashedRoot(selectedRoot.name)}' ничего не найдено 😕`,
+                  ),
                 )}
       </ScrollArea>
       <VerbDialog

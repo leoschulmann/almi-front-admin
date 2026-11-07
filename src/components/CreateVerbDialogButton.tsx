@@ -41,7 +41,7 @@ import {
   CreateVerbTranslation,
   VerbTranslation,
 } from "@/model/VerbTranslation.ts";
-import { aiMeanings } from "@/util/AiClient.ts";
+import { aiTranslations } from "@/util/AiClient.ts";
 import { hebrewLettersOnly } from "@/util/HebrewUtil.ts";
 
 // Create dialog (no editVerbId) and edit dialog (editVerbId): the same form.
@@ -139,19 +139,16 @@ export function VerbDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editVerbId, form]);
 
-  async function suggestMeanings() {
-    const { value, binyanId, gizrahId, prepositionId } = form.getValues();
+  async function suggestTranslations() {
+    const { value, binyanId, prepositionId } = form.getValues();
     const binyan = binyans.find((b) => b.id === binyanId)?.value;
-    const gizrot = gizrahs
-      .filter((g) => gizrahId.includes(g.id))
-      .map((g) => g.value);
     const rootName = editing ? loadedVerb?.root.name : selectedRoot?.name;
-    if (!rootName || !binyan || gizrot.length === 0) {
+    if (!rootName || !binyan || !value.trim()) {
       setAiResult({
         note: "",
         correction: null,
         unmatchedPrepositions: [],
-        error: "Select a binyan and at least one gizrah first.",
+        error: "Enter the verb and select a binyan first.",
       });
       return;
     }
@@ -159,10 +156,9 @@ export function VerbDialog({
     setAiLoading(true);
     setAiResult(null);
     try {
-      const response = await aiMeanings({
+      const response = await aiTranslations({
         root: rootName,
         binyan,
-        gizrot,
         infinitive: value,
       });
 
@@ -213,7 +209,7 @@ export function VerbDialog({
         error: null,
       });
     } catch (error) {
-      console.error("Meanings request failed:", error);
+      console.error("Translations request failed:", error);
       setAiResult({
         note: "",
         correction: null,
@@ -389,7 +385,7 @@ export function VerbDialog({
                       className="mt-7 shrink-0"
                       disabled={aiLoading}
                       title="Suggest translations and prepositions (needs binyan and gizrah)"
-                      onClick={() => void suggestMeanings()}
+                      onClick={() => void suggestTranslations()}
                     >
                       {aiLoading ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-black" />

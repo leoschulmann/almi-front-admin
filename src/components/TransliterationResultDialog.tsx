@@ -105,15 +105,15 @@ export function TransliterationResultDialog({
           disabled={!isUsable(r)}
           onChange={() => toggle(form.id)}
         />
-        <div className="flex flex-col">
-          <span dir="rtl" className="text-lg">
+        <div className="flex items-center gap-4">
+          <span dir="rtl" className="w-36 shrink-0 text-lg">
             {form.value}
           </span>
           {isUsable(r) ? (
-            <>
-              <span className="text-sm">{r.en}</span>
-              <span className="text-sm">{r.ru}</span>
-            </>
+            <div className="flex flex-col text-sm">
+              <span>{r.en}</span>
+              <span>{r.ru}</span>
+            </div>
           ) : (
             <span className="flex items-center gap-1 text-xs text-neutral-500">
               <CircleAlert className="size-4 shrink-0" />
